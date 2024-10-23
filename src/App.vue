@@ -2,6 +2,9 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 
+import { TEST_GAME } from "./game"
+TEST_GAME()
+
 const greetMsg = ref("");
 const name = ref("");
 
