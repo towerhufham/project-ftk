@@ -20,7 +20,7 @@ type Ability = {
   getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
   // getZoneTargets?: (game: GameState, card: CardInstance) => Zone[]
   //can include targetZones as an argument when we get there
-  applyEffect: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
+  getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
 } 
 
 type CardDefinition = {
@@ -211,7 +211,7 @@ const applyStateChanges = (game: GameState, changes: StateChange[]): GameState =
 
 const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
   //todo: plugging in targets, verifying conditions
-  return applyStateChanges(game, ability.applyEffect(game, card, []))
+  return applyStateChanges(game, ability.getStateChanges(game, card, []))
 }
 
 //---------------------------------------
@@ -225,7 +225,7 @@ export const TEST_GAME = () => {
     abilities: [{
       name: "Draw 1",
       limit: "OPT",
-      applyEffect: () => [{type: "Draw Card"}]
+      getStateChanges: () => [{type: "Draw Card"}]
     }],
     power: 100,
     allowedLayers: {
@@ -244,7 +244,7 @@ export const TEST_GAME = () => {
     abilities: [{
       name: "Draw 2",
       limit: "OPT",
-      applyEffect: () => [{type: "Draw Card"}, {type: "Draw Card"}]
+      getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
     }],
     power: 200,
     allowedLayers: {
