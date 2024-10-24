@@ -16,6 +16,8 @@ export type Zone = typeof ALL_ZONES[number]
 export type Ability = {
   name: string,
   limit: "Unlimited" | "OPT" | "Hard OPT"
+  onlyFrom?: Zone // | "Any Field" | "Any GY"
+  sendTo?: Zone //this is just a helper, could do it with a StateChange
   condition?: (game: GameState, card: CardInstance) => boolean
   getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
   // getZoneTargets?: (game: GameState, card: CardInstance) => Zone[]
@@ -211,10 +213,12 @@ const applyStateChanges = (game: GameState, changes: StateChange[]): GameState =
   return changes.reduce((state, stateChange) => applyStateChange(state, stateChange), game)
 }
 
-export const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
-  //todo: plugging in targets, verifying conditions
+export const tryApplyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState | string => {
+  //If the effect works, it returns the new GameState
+  //If it doesn't work, it returns a string saying why
+  if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
+  if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
+  //todo: check for valid targets (and if there are none, return an error string)
+  //then, plug targets into function (replacing the [])
   return applyStateChanges(game, ability.getStateChanges(game, card, []))
 }
-
-
-//---------------------------------------

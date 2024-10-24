@@ -2,7 +2,7 @@
   <main>
     <section id="field">
       <div id="field-d">
-        <Card v-for="card of game.board['Field-D']" :card @click="applyEffect(game, card, card.abilities[0])"/>
+        <Card v-for="card of game.board['Field-D']" :card/>
       </div>
       <div id="field-c">
         <Card v-for="card of game.board['Field-C']" :card/>
@@ -29,7 +29,7 @@
       </div>
     </section>
     <section id="hand">
-      <Card v-for="card of game.board.Hand" :card  @click="game = applyEffect(game, card, card.abilities[0])"/>
+      <Card v-for="card of game.board.Hand" :card  @click="clickHandler(card)"/>
     </section>
     <section id="deck-holder">
       <div id="deck">
@@ -43,8 +43,8 @@
   import "./normalize.css"
   import { ref, reactive } from "vue"
   import Card from "./Card.vue"
-  import type { CardDefinition } from "./game"
-  import { initGame, moveCard, spawnCardIntoGame, applyEffect } from "./game"
+  import type { CardDefinition, CardInstance } from "./game"
+  import { initGame, moveCard, spawnCardIntoGame, tryApplyEffect } from "./game"
 
   const def1: CardDefinition = {
     name: "Alpha",
@@ -73,6 +73,7 @@
     abilities: [{
       name: "Draw 2",
       limit: "OPT",
+      onlyFrom: "Field-A",
       getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
     }],
     power: 200,
@@ -89,6 +90,17 @@
     def1, def1, def1, def1, def1, 
     def2, def2, def2, def2, def2,
   ]))
+
+  const clickHandler = (card: CardInstance) => {
+    const result = tryApplyEffect(game.value, card, card.abilities[0])
+    if (typeof result === "string") {
+      //didn't work
+      alert(result)
+    } else {
+      //did work
+      game.value = result
+    }
+  }
 
   // game = moveCard(game, 7, "Field-A")
   // game = spawnCardIntoGame(game, def2, "GY-B")
