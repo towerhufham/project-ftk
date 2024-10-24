@@ -119,7 +119,7 @@
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr;
-    background-color: #325517;
+    background-color: #7ec85c;
   }
   #gy > div {
     /*this is not correct, lol*/
@@ -140,7 +140,7 @@
     background-color: #7ec85c;
   }
   #deck-holder {
-    background-color: #325517;
+    background-color: #407b13;
     display: flex;
     justify-content: center;
     align-items: center;
