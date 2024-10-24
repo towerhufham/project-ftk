@@ -13,19 +13,30 @@ const ALL_ZONES = [
 type Zone = typeof ALL_ZONES[number]
 
 
+type Ability = {
+  name: string,
+  limit: "Unlimited" | "OPT" | "Hard OPT"
+  condition?: (game: GameState, card: CardInstance) => boolean
+  getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
+  // getZoneTargets?: (game: GameState, card: CardInstance) => Zone[]
+  //can include targetZones as an argument when we get there
+  applyEffect: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
+} 
+
 type CardDefinition = {
   collectionNumber: number
   name: string
   elements: Set<Elemental>
   level: number
-  power: number
-  flavor: string
   allowedLayers: {
     "A": boolean
     "B": boolean
     "C": boolean
     "D": boolean
   }
+  abilities: Ability[]
+  power: number
+  flavor: string
 }
 
 type CardInstance = CardDefinition & {
@@ -38,30 +49,27 @@ const instantiateCard = (definition: CardDefinition, iid: number): CardInstance 
   }
 }
 
-type BoardChange = {
+type StateChange = {
+  type: "Draw Card"
+} | {
   type: "Spawn Card"
-  iid: number
+  definition: CardDefinition
   toZone: Zone
 } | {
-  type: "Move"
+  type: "Move Card"
   iid: number
-  //from might not be necessary, but seem helpful
-  fromZone: Zone
   toZone: Zone
 } | {
   type: "Change Elements"
   iid: number
-  oldElements: Set<Elemental>
   newElements: Set<Elemental>
 } | {
   type: "Change Level"
   iid: number
-  oldLevel: number
   newLevel: number
 } | {
   type: "Change Power"
   iid: number
-  oldPower: number
   newPower: number
 }
 
@@ -69,7 +77,7 @@ type GameState = {
   nextiid: number
   board: Record<Zone, CardInstance[]>
   moves: number
-  history: BoardChange[]
+  history: StateChange[]
 }
 
 const emptyBoard = (): Record<Zone, CardInstance[]> => {
@@ -141,17 +149,70 @@ const moveCard = (game: GameState, iid: number, to: Zone): GameState => {
 
 const spawnCardIntoGame = (game: GameState, definition: CardDefinition, zone: Zone): GameState => {
   const instance = instantiateCard(definition, game.nextiid)
-  const board = {
+  const newBoard = {
     ...game.board, 
     [zone]: [...game.board[zone], instance]
   }
   return {
     ...game,
     nextiid: game.nextiid + 1,
-    board
+    board: newBoard
   }
 }
 
+const editCardInstance = (game: GameState, iid: number, key: string, val: unknown): GameState => {
+  //only changes one attribute at a time
+  //the val isn't typechecked!
+  const card = getCardInstance(game, iid)
+  const zone = getCardZone(game, iid)
+  const newCard = {
+    ...card,
+    [key]: val
+  }
+  const newBoard = {
+    ...game.board,
+    [zone]: [...game.board[zone].filter(c => c.iid !== iid), newCard]
+  }
+  return {
+    ...game,
+    board: newBoard
+  }
+}
+
+const applyStateChange = (game: GameState, sc: StateChange): GameState => {
+  switch (sc.type) {
+    case "Draw Card": {
+      if (game.board.Deck.length < 1) return game 
+      const topDeck = game.board.Deck[0].iid
+      return moveCard(game, topDeck, "Hand")
+    }
+    case "Spawn Card": {
+      return spawnCardIntoGame(game, sc.definition, sc.toZone)
+    }
+    case "Move Card": {
+      return moveCard(game, sc.iid, sc.toZone)
+    }
+    case "Change Elements": {
+      return editCardInstance(game, sc.iid, "elements", sc.newElements)
+    }
+    case "Change Level": {
+      return editCardInstance(game, sc.iid, "level", sc.newLevel)
+    }
+    case "Change Power": {
+      return editCardInstance(game, sc.iid, "power", sc.newPower)
+    }
+  }
+}
+
+const applyStateChanges = (game: GameState, changes: StateChange[]): GameState => {
+  //simple helper
+  return changes.reduce((state, stateChange) => applyStateChange(state, stateChange), game)
+}
+
+const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
+  //todo: plugging in targets, verifying conditions
+  return applyStateChanges(game, ability.applyEffect(game, card, []))
+}
 
 //---------------------------------------
 
@@ -161,6 +222,11 @@ export const TEST_GAME = () => {
     collectionNumber: 0,
     elements: new Set(["Fire"]),
     level: 1,
+    abilities: [{
+      name: "Draw 1",
+      limit: "OPT",
+      applyEffect: () => [{type: "Draw Card"}]
+    }],
     power: 100,
     allowedLayers: {
       "A": true,
@@ -175,6 +241,11 @@ export const TEST_GAME = () => {
     collectionNumber: 1,
     elements: new Set(["Water"]),
     level: 3,
+    abilities: [{
+      name: "Draw 2",
+      limit: "OPT",
+      applyEffect: () => [{type: "Draw Card"}, {type: "Draw Card"}]
+    }],
     power: 200,
     allowedLayers: {
       "A": true,
@@ -186,12 +257,14 @@ export const TEST_GAME = () => {
   }
 
   let game = initGame([
+    def2, def2, def2, def2, def2,
     def1, def1, def1, def1, def1, 
-    def2, def2, def2, def2, def2
   ])
 
-  game = moveCard(game, 7, "Field-A")
-  game = spawnCardIntoGame(game, def2, "GY-B")
+  // game = moveCard(game, 7, "Field-A")
+  // game = spawnCardIntoGame(game, def2, "GY-B")
+  const grabbyCard = game.board.Hand[0]
+  game = applyEffect(game, grabbyCard, grabbyCard.abilities[0])
 
   console.dir(game)
 }
