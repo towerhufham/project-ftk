@@ -1,6 +1,6 @@
-type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark"
+export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark"
 
-type Layer = "A" | "B" | "C" | "D"
+export type Layer = "A" | "B" | "C" | "D"
 
 // type ZoneType = "Hand" | "Deck" | "Field" | "GY" | "Deleted"
 
@@ -10,10 +10,10 @@ const ALL_ZONES = [
   "Field-A", "Field-B", "Field-C", "Field-D",
   "GY-A", "GY-B", "GY-C", "GY-D"
 ] as const
-type Zone = typeof ALL_ZONES[number]
+export type Zone = typeof ALL_ZONES[number]
 
 
-type Ability = {
+export type Ability = {
   name: string,
   limit: "Unlimited" | "OPT" | "Hard OPT"
   condition?: (game: GameState, card: CardInstance) => boolean
@@ -23,7 +23,7 @@ type Ability = {
   getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
 } 
 
-type CardDefinition = {
+export type CardDefinition = {
   collectionNumber: number
   name: string
   elements: Set<Elemental>
@@ -39,7 +39,7 @@ type CardDefinition = {
   flavor: string
 }
 
-type CardInstance = CardDefinition & {
+export type CardInstance = CardDefinition & {
   iid: number
 }
 
@@ -49,7 +49,7 @@ const instantiateCard = (definition: CardDefinition, iid: number): CardInstance 
   }
 }
 
-type StateChange = {
+export type StateChange = {
   type: "Draw Card"
 } | {
   type: "Spawn Card"
@@ -73,11 +73,12 @@ type StateChange = {
   newPower: number
 }
 
-type GameState = {
+export type GameState = {
   nextiid: number
   board: Record<Zone, CardInstance[]>
   moves: number
   history: StateChange[]
+  interactionState: {type: "Standby"} | {type: "Targeting", card: CardInstance, ability: Ability}
 }
 
 const emptyBoard = (): Record<Zone, CardInstance[]> => {
@@ -96,7 +97,7 @@ const emptyBoard = (): Record<Zone, CardInstance[]> => {
   }
 }
 
-const initGame = (decklist: CardDefinition[]): GameState => {
+export const initGame = (decklist: CardDefinition[]): GameState => {
   //this bit was written by chat gpt, i didn't realize you could use reduce like that...
   const instances = decklist.reduce(
     (acc, definition, index) => [...acc, instantiateCard(definition, index)],
@@ -111,7 +112,8 @@ const initGame = (decklist: CardDefinition[]): GameState => {
       "Deck": instances.slice(5)
     },
     moves: 0,
-    history: []
+    history: [],
+    interactionState: {type: "Standby"}
   }
 }
 
@@ -133,7 +135,7 @@ const getCardZone = (game: GameState, iid: number): Zone => {
   throw new Error(`GAME ERROR: Can't find zone of card with iid ${iid}`)
 }
 
-const moveCard = (game: GameState, iid: number, to: Zone): GameState => {
+export const moveCard = (game: GameState, iid: number, to: Zone): GameState => {
   const card = getCardInstance(game, iid)
   const from = getCardZone(game, iid)
   const newBoard = {
@@ -147,7 +149,7 @@ const moveCard = (game: GameState, iid: number, to: Zone): GameState => {
   }
 }
 
-const spawnCardIntoGame = (game: GameState, definition: CardDefinition, zone: Zone): GameState => {
+export const spawnCardIntoGame = (game: GameState, definition: CardDefinition, zone: Zone): GameState => {
   const instance = instantiateCard(definition, game.nextiid)
   const newBoard = {
     ...game.board, 
@@ -209,62 +211,10 @@ const applyStateChanges = (game: GameState, changes: StateChange[]): GameState =
   return changes.reduce((state, stateChange) => applyStateChange(state, stateChange), game)
 }
 
-const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
+export const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
   //todo: plugging in targets, verifying conditions
   return applyStateChanges(game, ability.getStateChanges(game, card, []))
 }
 
+
 //---------------------------------------
-
-export const TEST_GAME = () => {
-  const def1: CardDefinition = {
-    name: "Alpha",
-    collectionNumber: 0,
-    elements: new Set(["Fire"]),
-    level: 1,
-    abilities: [{
-      name: "Draw 1",
-      limit: "OPT",
-      getStateChanges: () => [{type: "Draw Card"}]
-    }],
-    power: 100,
-    allowedLayers: {
-      "A": true,
-      "B": false,
-      "C": false,
-      "D": false
-    },
-    flavor: "Alpha test go!"
-  } 
-  const def2: CardDefinition = {
-    name: "Beta",
-    collectionNumber: 1,
-    elements: new Set(["Water"]),
-    level: 3,
-    abilities: [{
-      name: "Draw 2",
-      limit: "OPT",
-      getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
-    }],
-    power: 200,
-    allowedLayers: {
-      "A": true,
-      "B": true,
-      "C": false,
-      "D": false
-    },
-    flavor: "Beta test go!!"
-  }
-
-  let game = initGame([
-    def2, def2, def2, def2, def2,
-    def1, def1, def1, def1, def1, 
-  ])
-
-  // game = moveCard(game, 7, "Field-A")
-  // game = spawnCardIntoGame(game, def2, "GY-B")
-  const grabbyCard = game.board.Hand[0]
-  game = applyEffect(game, grabbyCard, grabbyCard.abilities[0])
-
-  console.dir(game)
-}
