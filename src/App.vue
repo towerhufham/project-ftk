@@ -2,7 +2,7 @@
   <main>
     <section id="field">
       <div id="field-d">
-        <Card v-for="card of game.board['Field-D']" :card/>
+        <Card v-for="card of game.board['Field-D']" :card @click="applyEffect(game, card, card.abilities[0])"/>
       </div>
       <div id="field-c">
         <Card v-for="card of game.board['Field-C']" :card/>
@@ -29,7 +29,7 @@
       </div>
     </section>
     <section id="hand">
-      <Card v-for="card of game.board.Hand" :card/>
+      <Card v-for="card of game.board.Hand" :card  @click="game = applyEffect(game, card, card.abilities[0])"/>
     </section>
     <section id="deck-holder">
       <div id="deck">
@@ -41,10 +41,10 @@
 
 <script setup lang="ts">
   import "./normalize.css"
-  import { reactive } from "vue"
+  import { ref, reactive } from "vue"
   import Card from "./Card.vue"
   import type { CardDefinition } from "./game"
-  import { initGame, moveCard, spawnCardIntoGame } from "./game"
+  import { initGame, moveCard, spawnCardIntoGame, applyEffect } from "./game"
 
   const def1: CardDefinition = {
     name: "Alpha",
@@ -85,13 +85,13 @@
     flavor: "Beta test go!!"
   }
 
-  let game = reactive(initGame([
+  let game = ref(initGame([
     def1, def1, def1, def1, def1, 
     def2, def2, def2, def2, def2,
   ]))
 
-  game = moveCard(game, 7, "Field-A")
-  game = spawnCardIntoGame(game, def2, "GY-B")
+  // game = moveCard(game, 7, "Field-A")
+  // game = spawnCardIntoGame(game, def2, "GY-B")
   // const grabbyCard = game.board.Hand[0]
   // game = applyEffect(game, grabbyCard, grabbyCard.abilities[0])
 </script>
