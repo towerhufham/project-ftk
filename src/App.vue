@@ -1,8 +1,41 @@
 <template>
   <main>
+    <section id="field">
+      <div id="field-d">
+        <Card v-for="card of game.board['Field-D']" :card/>
+      </div>
+      <div id="field-c">
+        <Card v-for="card of game.board['Field-C']" :card/>
+      </div>
+      <div id="field-b">
+        <Card v-for="card of game.board['Field-B']" :card/>
+      </div>
+      <div id="field-a">
+        <Card v-for="card of game.board['Field-A']" :card/>
+      </div>
+    </section>
+    <section id="gy">
+      <div id="gy-d">
+        <Card v-for="card of game.board['GY-D']" :card/>
+      </div>
+      <div id="gy-c">
+        <Card v-for="card of game.board['GY-C']" :card/>
+      </div>
+      <div id="gy-b">
+        <Card v-for="card of game.board['GY-B']" :card/>
+      </div>
+      <div id="gy-a">
+        <Card v-for="card of game.board['GY-A']" :card/>
+      </div>
+    </section>
     <section id="hand">
       <Card v-for="card of game.board.Hand" :card/>
-    </section>  
+    </section>
+    <section id="deck-holder">
+      <div id="deck">
+        <p>{{ game.board.Deck.length }}</p>
+      </div>
+    </section>
   </main>
 </template>
 
@@ -69,15 +102,61 @@
     height: 100vh;
     position: relative;
     background-color: #c4ffd0;
+    display: grid;
+    grid-template-columns: 1fr 225px;
+    grid-template-rows: 1fr 250px;
+  }
+  #field {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+  }
+  #field > div {
+    display: flex;
+    justify-content: center;
+  }
+  #gy {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+    background-color: #325517;
+  }
+  #gy > div {
+    /*this is not correct, lol*/
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  #gy > div > article {
+    /*for now*/
+    max-height: 50px;
   }
   #hand {
     display: flex;
     gap: 5px;
     padding: 15px;
     justify-content: center;
-    position: absolute;
-    width: 100vw;
-    bottom: 0px;
+    align-items: center;
     background-color: #7ec85c;
+  }
+  #deck-holder {
+    background-color: #325517;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #deck {
+    width: 150px;
+    height: 200px;
+    border: solid 1px black;
+    position: relative;
+    background-color: ghostwhite;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+  }
+  #deck > p {
+    font-size: 64px;
+    font-weight: bold;
   }
 </style>
