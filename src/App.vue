@@ -9,34 +9,34 @@
   <main>
     <section id="field">
       <div id="field-d">
-        <Card v-for="card of game.board['Field-D']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['Field-D']" :card @click="cardClickHandler(card)"/>
       </div>
       <div id="field-c">
-        <Card v-for="card of game.board['Field-C']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['Field-C']" :card @click="cardClickHandler(card)"/>
       </div>
       <div id="field-b">
-        <Card v-for="card of game.board['Field-B']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['Field-B']" :card @click="cardClickHandler(card)"/>
       </div>
       <div id="field-a">
-        <Card v-for="card of game.board['Field-A']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['Field-A']" :card @click="cardClickHandler(card)"/>
       </div>
     </section>
     <section id="gy">
       <div id="gy-d">
-        <Card v-for="card of game.board['GY-D']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['GY-D']" :card @click="cardClickHandler(card)"/>
       </div>
       <div id="gy-c">
-        <Card v-for="card of game.board['GY-C']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['GY-C']" :card @click="cardClickHandler(card)"/>
       </div>
       <div id="gy-b">
-        <Card v-for="card of game.board['GY-B']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['GY-B']" :card @click="cardClickHandler(card)"/>
       </div>
       <div id="gy-a">
-        <Card v-for="card of game.board['GY-A']" :card @click="clickHandler(card)"/>
+        <Card v-for="card of game.board['GY-A']" :card @click="cardClickHandler(card)"/>
       </div>
     </section>
     <section id="hand">
-      <Card v-for="card of game.board.Hand" :card @click="clickHandler(card)"/>
+      <Card v-for="card of game.board.Hand" :card @click="cardClickHandler(card)"/>
     </section>
     <section id="deck-holder">
       <div id="deck">
@@ -53,8 +53,10 @@
   import Card from "./Card.vue"
   import AbilityChooser from "./AbilityChooser.vue"
 
-  import type { Ability, CardDefinition, CardInstance } from "./game"
+  import type { Ability, CardDefinition, CardInstance, LayerGroup } from "./game"
   import { initGame, applyEffect, isAbilityActivatable } from "./game"
+
+  //----------------- TESTING --------------------//
 
   const def1: CardDefinition = {
     name: "Alpha",
@@ -103,6 +105,8 @@
     flavor: "Beta test go!!"
   }
 
+  //----------------- END TESTING --------------------//
+
 
   type UIMode = {
     type: "Standby"
@@ -113,6 +117,9 @@
     type: "Choosing Targets",
     card: CardInstance,
     ability: Ability
+  } | {
+    type: "Choosing Layer",
+    allowedLayers: LayerGroup
   }
 
   const mode: Ref<UIMode> = ref({type: "Standby"})
@@ -122,11 +129,14 @@
     def2, def2, def2, def2, def2,
   ]))
 
-  const clickHandler = (card: CardInstance) => {
-    mode.value = {
-      type: "Choosing Ability", 
-      card
+  const cardClickHandler = (card: CardInstance) => {
+    if (mode.value.type === "Standby") {
+      mode.value = {
+        type: "Choosing Ability", 
+        card
+      }
     }
+    //todo: if (mode.value.type === "Choosing Targets")
   }
 
   const tryAbility = (card: CardInstance, ability: Ability) => {

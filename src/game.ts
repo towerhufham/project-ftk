@@ -2,6 +2,13 @@ export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind"
 
 export type Layer = "A" | "B" | "C" | "D"
 
+export type LayerGroup = {
+  "A": boolean,
+  "B": boolean,
+  "C": boolean,
+  "D": boolean
+}
+
 // type ZoneType = "Hand" | "Deck" | "Field" | "GY" | "Deleted"
 
 //making it an as const array instead of a union type makes it iteratable
@@ -30,12 +37,7 @@ export type CardDefinition = {
   name: string
   elements: Set<Elemental>
   level: number
-  allowedLayers: {
-    "A": boolean
-    "B": boolean
-    "C": boolean
-    "D": boolean
-  }
+  allowedLayers: LayerGroup
   abilities: Ability[]
   power: number
   flavor: string
