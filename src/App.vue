@@ -84,7 +84,8 @@
       name: "Summon",
       limit: "OPT",
       onlyFrom: "Hand",
-      getStateChanges: (_, card: CardInstance) => [{type: "Move Card", iid: card.iid, toZone: "Field-A"}]
+      sendTo: "Field-A",
+      getStateChanges: () => []
     },
     {
       name: "Draw 2",

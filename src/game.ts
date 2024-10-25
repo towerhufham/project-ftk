@@ -17,7 +17,7 @@ export type Ability = {
   name: string,
   limit: "Unlimited" | "OPT" | "Hard OPT"
   onlyFrom?: Zone // | "Any Field" | "Any GY"
-  // sendTo?: Zone //this is just a helper, could do it with a StateChange
+  sendTo?: Zone //this is just a helper, could do it with a StateChange
   condition?: (game: GameState, card: CardInstance) => boolean
   getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
   // getZoneTargets?: (game: GameState, card: CardInstance) => Zone[]
@@ -225,7 +225,9 @@ export const applyEffect = (game: GameState, card: CardInstance, ability: Abilit
   if (isAbilityActivatable(game, card, ability) !== true) throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
   //todo: plug targets into function (replacing the [])
   const stateChanges = ability.getStateChanges(game, card, [])
-  const result = applyStateChanges(game, stateChanges)
+  //if the ability has a sendTo, add it to the changes
+  const result = ability.sendTo ? applyStateChanges(game, [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}])
+                                : applyStateChanges(game, stateChanges)
   return {
     ...result,
     moves: game.moves + 1,

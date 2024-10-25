@@ -1,7 +1,7 @@
 <template>
   <article>
-    <p id="name">{{ card.name }}</p>
-    <p id="flavor">{{ card.flavor }}</p>
+    <p id="name">{{ props.card.name }}</p>
+    <p id="flavor">{{ props.card.flavor }}</p>
   </article>
 </template>
 
