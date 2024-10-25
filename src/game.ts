@@ -17,7 +17,7 @@ export type Ability = {
   name: string,
   limit: "Unlimited" | "OPT" | "Hard OPT"
   onlyFrom?: Zone // | "Any Field" | "Any GY"
-  sendTo?: Zone //this is just a helper, could do it with a StateChange
+  // sendTo?: Zone //this is just a helper, could do it with a StateChange
   condition?: (game: GameState, card: CardInstance) => boolean
   getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
   // getZoneTargets?: (game: GameState, card: CardInstance) => Zone[]
@@ -213,12 +213,22 @@ const applyStateChanges = (game: GameState, changes: StateChange[]): GameState =
   return changes.reduce((state, stateChange) => applyStateChange(state, stateChange), game)
 }
 
-export const tryApplyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState | string => {
-  //If the effect works, it returns the new GameState
-  //If it doesn't work, it returns a string saying why
+export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): true | string => {
+  //If it can't be activated, it returns a string saying why
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
   //todo: check for valid targets (and if there are none, return an error string)
-  //then, plug targets into function (replacing the [])
-  return applyStateChanges(game, ability.getStateChanges(game, card, []))
+  return true
+}
+
+export const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
+  if (isAbilityActivatable(game, card, ability) !== true) throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
+  //todo: plug targets into function (replacing the [])
+  const stateChanges = ability.getStateChanges(game, card, [])
+  const result = applyStateChanges(game, stateChanges)
+  return {
+    ...result,
+    moves: game.moves + 1,
+    history: [...game.history, ...stateChanges]
+  }
 }

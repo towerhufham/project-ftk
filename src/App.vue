@@ -1,35 +1,42 @@
 <template>
+  <!-- todo: sometimes cancelling won't be allowed -->
+  <AbilityChooser 
+    v-if="mode.type === 'Choosing Ability'" 
+    :card="mode.card" 
+    @cancel="mode = {type: 'Standby'}"
+    @select="(card: CardInstance, ability: Ability) => tryAbility(card, ability)"
+  />
   <main>
     <section id="field">
       <div id="field-d">
-        <Card v-for="card of game.board['Field-D']" :card/>
+        <Card v-for="card of game.board['Field-D']" :card @click="clickHandler(card)"/>
       </div>
       <div id="field-c">
-        <Card v-for="card of game.board['Field-C']" :card/>
+        <Card v-for="card of game.board['Field-C']" :card @click="clickHandler(card)"/>
       </div>
       <div id="field-b">
-        <Card v-for="card of game.board['Field-B']" :card/>
+        <Card v-for="card of game.board['Field-B']" :card @click="clickHandler(card)"/>
       </div>
       <div id="field-a">
-        <Card v-for="card of game.board['Field-A']" :card/>
+        <Card v-for="card of game.board['Field-A']" :card @click="clickHandler(card)"/>
       </div>
     </section>
     <section id="gy">
       <div id="gy-d">
-        <Card v-for="card of game.board['GY-D']" :card/>
+        <Card v-for="card of game.board['GY-D']" :card @click="clickHandler(card)"/>
       </div>
       <div id="gy-c">
-        <Card v-for="card of game.board['GY-C']" :card/>
+        <Card v-for="card of game.board['GY-C']" :card @click="clickHandler(card)"/>
       </div>
       <div id="gy-b">
-        <Card v-for="card of game.board['GY-B']" :card/>
+        <Card v-for="card of game.board['GY-B']" :card @click="clickHandler(card)"/>
       </div>
       <div id="gy-a">
-        <Card v-for="card of game.board['GY-A']" :card/>
+        <Card v-for="card of game.board['GY-A']" :card @click="clickHandler(card)"/>
       </div>
     </section>
     <section id="hand">
-      <Card v-for="card of game.board.Hand" :card  @click="clickHandler(card)"/>
+      <Card v-for="card of game.board.Hand" :card @click="clickHandler(card)"/>
     </section>
     <section id="deck-holder">
       <div id="deck">
@@ -41,10 +48,13 @@
 
 <script setup lang="ts">
   import "./normalize.css"
-  import { ref, reactive } from "vue"
+  import { ref, Ref } from "vue"
+
   import Card from "./Card.vue"
-  import type { CardDefinition, CardInstance } from "./game"
-  import { initGame, moveCard, spawnCardIntoGame, tryApplyEffect } from "./game"
+  import AbilityChooser from "./AbilityChooser.vue"
+
+  import type { Ability, CardDefinition, CardInstance } from "./game"
+  import { initGame, applyEffect, isAbilityActivatable } from "./game"
 
   const def1: CardDefinition = {
     name: "Alpha",
@@ -71,6 +81,12 @@
     elements: new Set(["Water"]),
     level: 3,
     abilities: [{
+      name: "Summon",
+      limit: "OPT",
+      onlyFrom: "Hand",
+      getStateChanges: (_, card: CardInstance) => [{type: "Move Card", iid: card.iid, toZone: "Field-A"}]
+    },
+    {
       name: "Draw 2",
       limit: "OPT",
       onlyFrom: "Field-A",
@@ -86,19 +102,43 @@
     flavor: "Beta test go!!"
   }
 
-  let game = ref(initGame([
+
+  type UIMode = {
+    type: "Standby"
+  } | {
+    type: "Choosing Ability",
+    card: CardInstance
+  } | {
+    type: "Choosing Targets",
+    card: CardInstance,
+    ability: Ability
+  }
+
+  const mode: Ref<UIMode> = ref({type: "Standby"})
+
+  const game = ref(initGame([
     def1, def1, def1, def1, def1, 
     def2, def2, def2, def2, def2,
   ]))
 
   const clickHandler = (card: CardInstance) => {
-    const result = tryApplyEffect(game.value, card, card.abilities[0])
-    if (typeof result === "string") {
+    mode.value = {
+      type: "Choosing Ability", 
+      card
+    }
+  }
+
+  const tryAbility = (card: CardInstance, ability: Ability) => {
+    const activatable = isAbilityActivatable(game.value, card, ability)
+    if (typeof activatable === "string") {
       //didn't work
-      alert(result)
+      alert(activatable)
     } else {
       //did work
+      const result = applyEffect(game.value, card, ability)
       game.value = result
+      mode.value = {type: "Standby"}
+      console.log(game.value)
     }
   }
 
