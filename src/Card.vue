@@ -1,24 +1,46 @@
 <template>
-  <article>
-    <p id="name">{{ props.card.name }}</p>
-    <p id="flavor">{{ props.card.flavor }}</p>
+  <article :class="{'activatable': hasActivatableAbility}">
+    <p id="name">{{ card.name }}</p>
+    <p id="flavor">{{ card.flavor }}</p>
   </article>
 </template>
 
 <script setup lang="ts">
-  import type { CardInstance } from "./game"
+  import type { CardInstance, GameState } from "./game"
+  import { isAbilityActivatable } from "./game"
+  import { computed } from "vue"
+
   const props = defineProps<{
+    game: GameState,
     card: CardInstance
   }>()
+
+  const hasActivatableAbility = computed(() => {
+    return props.card.abilities.map(a => isAbilityActivatable(props.game, props.card, a)).some(val => val === true)
+  })
 </script>
 
 <style scoped>
   article {
     width: 150px;
     height: 200px;
-    border: solid 1px black;
+    border: solid 4px black;
     position: relative;
     background-color: ghostwhite;
+    transition: all 0.25s;
+  }
+  @keyframes glow {
+    from {border: solid 4px black;}
+    to {border: solid 4px cornflowerblue;}
+  }
+  article.activatable {
+    animation: glow;
+    animation-duration: 0.75s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+  article.activatable:hover {
+    transform: translateY(-25px);
   }
   #name {
     font-weight: bold;

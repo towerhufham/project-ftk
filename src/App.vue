@@ -2,19 +2,19 @@
   <!-- todo: sometimes cancelling won't be allowed -->
   <AbilityChooser 
     v-if="mode.type === 'Choosing Ability'" 
-    :card="mode.card" 
+    :card="mode.card" :game
     @cancel="mode = {type: 'Standby'}"
     @select="(card: CardInstance, ability: Ability) => tryAbility(card, ability)"
   />
   <main>
     <section id="field">
-      <Card v-for="card of game.board['Field']" :card @click="cardClickHandler(card)"/>
+      <Card v-for="card of game.board['Field']" :game :card @click="cardClickHandler(card)"/>
     </section>
     <section id="gy">
-      <Card v-for="card of game.board['GY']" :card @click="cardClickHandler(card)"/>
+      <Card v-for="card of game.board['GY']" :game :card @click="cardClickHandler(card)"/>
     </section>
     <section id="hand">
-      <Card v-for="card of game.board.Hand" :card @click="cardClickHandler(card)"/>
+      <Card v-for="card of game.board.Hand" :game :card @click="cardClickHandler(card)"/>
     </section>
     <section id="deck-holder">
       <div id="deck">
@@ -64,7 +64,7 @@
     },
     {
       name: "Draw 2",
-      limitPerTurn: "Unlimited",
+      limitPerTurn: 1,
       onlyFrom: "Field",
       getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
     }],
