@@ -43,7 +43,7 @@
     level: 1,
     abilities: [{
       name: "Draw 1",
-      limit: "OPT",
+      limitPerTurn: 1,
       sendTo: "GY",
       getStateChanges: () => [{type: "Draw Card"}]
     }],
@@ -57,14 +57,14 @@
     level: 3,
     abilities: [{
       name: "Summon",
-      limit: "OPT",
+      limitPerTurn: 1,
       onlyFrom: "Hand",
       sendTo: "Field",
       getStateChanges: () => []
     },
     {
       name: "Draw 2",
-      limit: "OPT",
+      limitPerTurn: "Unlimited",
       onlyFrom: "Field",
       getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
     }],

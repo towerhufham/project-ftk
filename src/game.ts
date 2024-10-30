@@ -9,7 +9,7 @@ export type Zone = typeof ALL_ZONES[number]
 
 export type Ability = {
   name: string,
-  limit: "Unlimited" | "OPT" | "Hard OPT"
+  limitPerTurn: number | "Unlimited"
   onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange
   condition?: (game: GameState, card: CardInstance) => boolean
@@ -30,12 +30,16 @@ export type CardDefinition = {
 }
 
 export type CardInstance = CardDefinition & {
+  //instance iid, should be unique within a game object
   iid: number
+  //keeps track of how many times an ability has been used this turn
+  abilityUses: number[]
 }
 
 const instantiateCard = (definition: CardDefinition, iid: number): CardInstance => {
+  const abilityUses = definition.abilities.map(_ => 0)
   return {
-    ...definition, iid
+    ...definition, iid, abilityUses
   }
 }
 
@@ -169,6 +173,21 @@ const editCardInstance = (game: GameState, iid: number, key: string, val: unknow
   }
 }
 
+const getAbilityUses = (game: GameState, iid: number, ability: Ability): number => {
+  const card = getCardInstance(game, iid)
+  const index = card.abilities.findIndex(a => a === ability)
+  return card.abilityUses[index]
+}
+const incrementAbilityUse = (game: GameState, iid: number, ability: Ability): GameState => {
+  const card = getCardInstance(game, iid)
+  const index = card.abilities.findIndex(a => a === ability)
+  const newCount = card.abilityUses[index] + 1
+  const newAbilityUses = card.abilityUses.map((element, i) => {
+    return (i === index) ? newCount : element
+  })
+  return editCardInstance(game, iid, "abilityUses", newAbilityUses)
+}
+
 const applyStateChange = (game: GameState, sc: StateChange): GameState => {
   switch (sc.type) {
     case "Draw Card": {
@@ -201,6 +220,7 @@ const applyStateChanges = (game: GameState, changes: StateChange[]): GameState =
 
 export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): true | string => {
   //If it can't be activated, it returns a string saying why
+  if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
   //todo: check for valid targets (and if there are none, return an error string)
@@ -212,8 +232,9 @@ export const applyEffect = (game: GameState, card: CardInstance, ability: Abilit
   //todo: plug targets into function (replacing the [])
   const stateChanges = ability.getStateChanges(game, card, [])
   //if the ability has a sendTo, add it to the changes
-  const result = ability.sendTo ? applyStateChanges(game, [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}])
-                                : applyStateChanges(game, stateChanges)
+  const withSendTo = ability.sendTo ? applyStateChanges(game, [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}])
+                                    : applyStateChanges(game, stateChanges)
+  const result = incrementAbilityUse(withSendTo, card.iid, ability)
   return {
     ...result,
     moves: game.moves + 1,
