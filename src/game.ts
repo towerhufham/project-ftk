@@ -1,29 +1,16 @@
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark"
 
-export type Layer = "A" | "B" | "C" | "D"
-
-export type LayerGroup = {
-  "A": boolean,
-  "B": boolean,
-  "C": boolean,
-  "D": boolean
-}
-
 // type ZoneType = "Hand" | "Deck" | "Field" | "GY" | "Deleted"
 
 //making it an as const array instead of a union type makes it iteratable
-const ALL_ZONES = [
-  "Hand", "Deck", "Deleted",
-  "Field-A", "Field-B", "Field-C", "Field-D",
-  "GY-A", "GY-B", "GY-C", "GY-D"
-] as const
+const ALL_ZONES = ["Hand", "Deck", "Deleted", "Field", "GY"] as const
 export type Zone = typeof ALL_ZONES[number]
 
 
 export type Ability = {
   name: string,
   limit: "Unlimited" | "OPT" | "Hard OPT"
-  onlyFrom?: Zone // | "Any Field" | "Any GY"
+  onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange
   condition?: (game: GameState, card: CardInstance) => boolean
   getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
@@ -37,7 +24,6 @@ export type CardDefinition = {
   name: string
   elements: Set<Elemental>
   level: number
-  allowedLayers: LayerGroup
   abilities: Ability[]
   power: number
   flavor: string
@@ -90,14 +76,8 @@ const emptyBoard = (): Record<Zone, CardInstance[]> => {
     "Deck": [],
     "Hand": [],
     "Deleted": [],
-    "Field-A": [],
-    "Field-B": [],
-    "Field-C": [],
-    "Field-D": [],
-    "GY-A": [],
-    "GY-B": [],
-    "GY-C": [],
-    "GY-D": []
+    "Field": [],
+    "GY": [],
   }
 }
 
