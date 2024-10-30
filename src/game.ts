@@ -122,6 +122,10 @@ const getCardZone = (game: GameState, iid: number): Zone => {
 export const moveCard = (game: GameState, iid: number, to: Zone): GameState => {
   const card = getCardInstance(game, iid)
   const from = getCardZone(game, iid)
+  console.log(`moving iid ${iid} from ${from} to ${to}`)
+  //if we're trying to move the card to the same zone it's in, don't do anything
+  if (from === to) return game
+  //otherwise, remove it from the old zone and put it in the new one
   const newBoard = {
     ...game.board,
     [from]: game.board[from].filter(card => card.iid !== iid),
