@@ -1,4 +1,4 @@
-export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark"
+export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
 // type ZoneType = "Hand" | "Deck" | "Field" | "GY" | "Deleted"
 

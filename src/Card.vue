@@ -2,10 +2,14 @@
   <article :class="{'activatable': hasActivatableAbility}">
     <p id="name">{{ card.name }}</p>
     <p id="flavor">{{ card.flavor }}</p>
+    <div id="elements">
+      <ElementIcon v-for="e of card.elements" :e/>
+    </div>
   </article>
 </template>
 
 <script setup lang="ts">
+  import ElementIcon from "./ElementIcon.vue";
   import type { CardInstance, GameState } from "./game"
   import { isAbilityActivatable } from "./game"
   import { computed } from "vue"
@@ -47,11 +51,20 @@
     position: absolute;
     left: 5px;
     top: 5px;
+    margin: 0;
+    font-family: "Alegreya SC", serif;
   }
   #flavor {
     font-style: italic;
     position: absolute;
     left: 5px;
     bottom: 5px;
+    margin: 0;
+    font-family: "Alegreya SC", serif;
+  }
+  #elements {
+    position: absolute;
+    right: 5px;
+    top: 5px;
   }
 </style>

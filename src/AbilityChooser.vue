@@ -44,6 +44,9 @@
     align-items: center;
     background-color: rgba(0, 0, 0, 0.5);
   }
+  .modal p {
+    font-family: "Jost", sans-serif;
+  }
   .holder {
     background-color: white;
     width: 50vw;

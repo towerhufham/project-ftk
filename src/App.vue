@@ -53,7 +53,7 @@
   const def2: CardDefinition = {
     name: "Beta",
     collectionNumber: 1,
-    elements: new Set(["Water"]),
+    elements: new Set(["Water", "Dark"]),
     level: 3,
     abilities: [{
       name: "Summon",
@@ -175,5 +175,6 @@
   #deck > p {
     font-size: 64px;
     font-weight: bold;
+    font-family: "Aldrich", serif;
   }
 </style>
