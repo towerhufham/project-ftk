@@ -1,10 +1,9 @@
 <template>
-  <!-- todo: sometimes ability cancelling won't be allowed -->
   <AbilityChooser 
     v-if="mode.type === 'Choosing Ability'" 
     :card="mode.card" :game
     @cancel="mode = {type: 'Standby'}"
-    @select="(card: CardInstance, ability: Ability) => tryAbility(card, ability)"
+    @select="(ability: Ability) => tryAbility(ability)"
   />
   <!-- todo: multitargeting -->
   <TargetChooser 
@@ -131,8 +130,9 @@
     }
   }
 
-  //todo: we actually already know what card is, it's mode.card
-  const tryAbility = (card: CardInstance, ability: Ability) => {
+  const tryAbility = (ability: Ability) => {
+    if (mode.value.type !== "Choosing Ability") throw new Error(`UI ERROR: Called tryAbility while ui is in '${mode.value.type}' mode`)
+    const card = mode.value.card
     const activatable = isAbilityActivatable(game.value, card, ability)
     if (typeof activatable === "string") {
       //didn't work
@@ -143,11 +143,8 @@
         mode.value = {type: "Choosing Targets", card, ability}
       } else {
         //if it doesn't target, go ahead and activate
-        //todo: should probably be extracted
-        const result = applyEffect(game.value, card, ability, [])
-        game.value = result
-        mode.value = {type: "Standby"}
-        console.log(game.value)
+        const result = applyEffect(game.value, mode.value.card, ability, [])
+        finalizeResult(result)
       }
     }
   }
@@ -155,6 +152,10 @@
   const executeAbilityWithTargets = (targets: CardInstance[]) => {
     if (mode.value.type !== "Choosing Targets") throw new Error(`UI ERROR: Called executeAbilityWithTargets while ui is in '${mode.value.type}' mode`)
     const result = applyEffect(game.value, mode.value.card, mode.value.ability, targets)
+    finalizeResult(result)
+  }
+
+  const finalizeResult = (result: GameState) => {
     game.value = result
     mode.value = {type: "Standby"}
     console.log(game.value)

@@ -1,5 +1,6 @@
 //todo: use CardInstance instead of iid in most functions
 //todo: make the arguments for effects a single object 
+//todo: isAbilityActivatable shouldn't return a string because strings and truthy, or rather, it should return an "OK" string
 
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 

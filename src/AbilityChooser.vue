@@ -4,7 +4,7 @@
       <p>Choose ability:</p>
       <div 
         v-for="ability of props.card.abilities" 
-        @click="emit('select', card, ability)" 
+        @click="emit('select', ability)" 
         class="ability-button"
         :class="{'activatable': canActivateAbility(ability)}"
       >
@@ -25,7 +25,7 @@
 
   const emit = defineEmits<{
     cancel: [],
-    select: [card: CardInstance, ability: Ability]
+    select: [ability: Ability]
   }>()
 
   const canActivateAbility = (ability: Ability) => {
