@@ -1,3 +1,6 @@
+//todo: use CardInstance instead of iid in most functions
+//todo: make the arguments for effects a single object 
+
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
 // type ZoneType = "Hand" | "Deck" | "Field" | "GY" | "Deleted"
@@ -13,9 +16,12 @@ export type Ability = {
   onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange
   condition?: (game: GameState, card: CardInstance) => boolean
-  getCardTargets?: (game: GameState, card: CardInstance) => CardInstance[]
-  // getZoneTargets?: (game: GameState, card: CardInstance) => Zone[]
-  //can include targetZones as an argument when we get there
+  targeting?: {
+    //for now assume only 1 target
+    //todo: multitarget
+    isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => boolean
+    canSelfTarget: boolean //might not be that useful
+  }
   getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
 } 
 
@@ -114,7 +120,7 @@ const getCardInstance = (game: GameState, iid: number): CardInstance => {
   }
   throw new Error(`GAME ERROR: Can't find card with iid ${iid}`)
 }
-const getCardZone = (game: GameState, iid: number): Zone => {
+export const getCardZone = (game: GameState, iid: number): Zone => {
   for (const zone of ALL_ZONES) {
     for (const card of game.board[zone]) {
       if (card.iid === iid) return zone
@@ -218,19 +224,30 @@ const applyStateChanges = (game: GameState, changes: StateChange[]): GameState =
   return changes.reduce((state, stateChange) => applyStateChange(state, stateChange), game)
 }
 
+const getAllCards = (game: GameState): CardInstance[] => {
+  return ALL_ZONES.reduce((acc, zone) => [...acc, ...game.board[zone]], [] as CardInstance[])
+}
+
+export const getValidAbilityTargets = (game: GameState, card: CardInstance, ability: Ability): CardInstance[] => {
+  if (!ability.targeting) throw new Error("GAME ERROR: Trying to get valid targets of an ability with no getCardTargets()")
+  const valid = getAllCards(game).filter(c => ability.targeting!.isCardValidTarget!(game, card, c))
+  return (ability.targeting.canSelfTarget) ? valid : valid.filter(c => c !== card)
+}
+
 export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): true | string => {
   //If it can't be activated, it returns a string saying why
   if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
+  if (ability.targeting && getValidAbilityTargets(game, card, ability).length === 0) return "Ability has no valid targets"
   //todo: check for valid targets (and if there are none, return an error string)
   return true
 }
 
-export const applyEffect = (game: GameState, card: CardInstance, ability: Ability): GameState => {
+export const applyEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
   if (isAbilityActivatable(game, card, ability) !== true) throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
   //todo: plug targets into function (replacing the [])
-  const stateChanges = ability.getStateChanges(game, card, [])
+  const stateChanges = ability.getStateChanges(game, card, targets)
   //if the ability has a sendTo, add it to the changes
   const withSendTo = ability.sendTo ? applyStateChanges(game, [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}])
                                     : applyStateChanges(game, stateChanges)

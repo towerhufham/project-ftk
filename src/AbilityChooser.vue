@@ -34,6 +34,7 @@
 </script>
 
 <style scoped>
+  /* todo: extract this modal stuff into css file */
   .modal {
     position: absolute;
     z-index: 999;

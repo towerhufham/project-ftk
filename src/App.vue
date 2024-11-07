@@ -1,10 +1,17 @@
 <template>
-  <!-- todo: sometimes cancelling won't be allowed -->
+  <!-- todo: sometimes ability cancelling won't be allowed -->
   <AbilityChooser 
     v-if="mode.type === 'Choosing Ability'" 
     :card="mode.card" :game
     @cancel="mode = {type: 'Standby'}"
     @select="(card: CardInstance, ability: Ability) => tryAbility(card, ability)"
+  />
+  <!-- todo: multitargeting -->
+  <TargetChooser 
+    v-if="mode.type === 'Choosing Targets'" 
+    :card="mode.card" :ability="mode.ability" :game
+    @cancel="mode = {type: 'Standby'}"
+    @select="(target: CardInstance) => executeAbilityWithTargets([target])"
   />
   <main>
     <section id="field">
@@ -14,7 +21,7 @@
       <Card v-for="card of game.board['GY']" :game :card @click="cardClickHandler(card)"/>
     </section>
     <section id="hand">
-      <Card v-for="card of game.board.Hand" :game :card @click="cardClickHandler(card)"/>
+      <Card v-for="card of game.board['Hand']" :game :card @click="cardClickHandler(card)"/>
     </section>
     <section id="deck-holder">
       <div id="deck">
@@ -30,9 +37,10 @@
 
   import Card from "./Card.vue"
   import AbilityChooser from "./AbilityChooser.vue"
+  import TargetChooser from "./TargetChooser.vue"
 
-  import type { Ability, CardDefinition, CardInstance } from "./game"
-  import { initGame, applyEffect, isAbilityActivatable } from "./game"
+  import type { Ability, CardDefinition, CardInstance, GameState } from "./game"
+  import { initGame, applyEffect, isAbilityActivatable, getCardZone } from "./game"
 
   //----------------- TESTING --------------------//
 
@@ -42,10 +50,31 @@
     elements: new Set(["Fire"]),
     level: 1,
     abilities: [{
-      name: "Draw 1",
+      name: "Search Any From Deck",
       limitPerTurn: 1,
       sendTo: "GY",
-      getStateChanges: () => [{type: "Draw Card"}]
+      targeting: {
+        canSelfTarget: false,
+        isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => {
+          return (getCardZone(game, target.iid) === "Deck")
+        }
+      },
+      getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => {
+        return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+      }
+    }, {
+      name: "Search Any From GY",
+      limitPerTurn: 1,
+      sendTo: "GY",
+      targeting: {
+        canSelfTarget: false,
+        isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => {
+          return (getCardZone(game, target.iid) === "GY")
+        }
+      },
+      getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => {
+        return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+      }
     }],
     power: 100,
     flavor: "Alpha test go!"
@@ -100,27 +129,36 @@
         card
       }
     }
-    //todo: if (mode.value.type === "Choosing Targets")
   }
 
+  //todo: we actually already know what card is, it's mode.card
   const tryAbility = (card: CardInstance, ability: Ability) => {
     const activatable = isAbilityActivatable(game.value, card, ability)
     if (typeof activatable === "string") {
       //didn't work
       alert(activatable)
     } else {
-      //did work
-      const result = applyEffect(game.value, card, ability)
-      game.value = result
-      mode.value = {type: "Standby"}
-      console.log(game.value)
+      if (ability.targeting) {
+        //if ability targets, set ui to targeting mode
+        mode.value = {type: "Choosing Targets", card, ability}
+      } else {
+        //if it doesn't target, go ahead and activate
+        //todo: should probably be extracted
+        const result = applyEffect(game.value, card, ability, [])
+        game.value = result
+        mode.value = {type: "Standby"}
+        console.log(game.value)
+      }
     }
   }
 
-  // game = moveCard(game, 7, "Field-A")
-  // game = spawnCardIntoGame(game, def2, "GY-B")
-  // const grabbyCard = game.board.Hand[0]
-  // game = applyEffect(game, grabbyCard, grabbyCard.abilities[0])
+  const executeAbilityWithTargets = (targets: CardInstance[]) => {
+    if (mode.value.type !== "Choosing Targets") throw new Error(`UI ERROR: Called executeAbilityWithTargets while ui is in '${mode.value.type}' mode`)
+    const result = applyEffect(game.value, mode.value.card, mode.value.ability, targets)
+    game.value = result
+    mode.value = {type: "Standby"}
+    console.log(game.value)
+  }
 </script>
 
 <style scoped>
