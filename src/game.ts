@@ -4,12 +4,9 @@
 
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
-// type ZoneType = "Hand" | "Deck" | "Field" | "GY" | "Deleted"
-
 //making it an as const array instead of a union type makes it iteratable
 const ALL_ZONES = ["Hand", "Deck", "Deleted", "Field", "GY"] as const
 export type Zone = typeof ALL_ZONES[number]
-
 
 export type Ability = {
   name: string,
@@ -20,6 +17,7 @@ export type Ability = {
   targeting?: {
     //for now assume only 1 target
     //todo: multitarget
+    //notice that the arguments for this function and getStateChanges are almost identical
     isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => boolean
     canSelfTarget: boolean //might not be that useful
   }
@@ -164,15 +162,25 @@ export const spawnCardIntoGame = (game: GameState, definition: CardDefinition, z
 const editCardInstance = (game: GameState, iid: number, key: string, val: unknown): GameState => {
   //only changes one attribute at a time
   //the val isn't typechecked!
+  //todo: preserve the order of cards (by iid)
   const card = getCardInstance(game, iid)
   const zone = getCardZone(game, iid)
   const newCard = {
     ...card,
     [key]: val
   }
+  //chat gpt helped me figure out how to preserve the card's position in the array
+  //to prevent weird visual jumps
+  const originalZoneCards = game.board[zone]
+  const cardIndex = originalZoneCards.findIndex(c => c.iid === iid)
+  const newZoneCards = [
+    ...originalZoneCards.slice(0, cardIndex),
+    newCard,
+    ...originalZoneCards.slice(cardIndex + 1),
+  ]
   const newBoard = {
     ...game.board,
-    [zone]: [...game.board[zone].filter(c => c.iid !== iid), newCard]
+    [zone]: newZoneCards,
   }
   return {
     ...game,
