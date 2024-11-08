@@ -10,7 +10,7 @@ const ALL_ZONES = ["Hand", "Deck", "Deleted", "Field", "GY"] as const
 export type Zone = typeof ALL_ZONES[number]
 
 export type Ability = {
-  name: string
+  description: string
   minLevel: number
   limitPerTurn: number | "Unlimited"
   onlyFrom?: Zone
@@ -255,6 +255,7 @@ type ActivationResult = "OK" | "Hit ability limit for this turn" | "Card conditi
 
 export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): ActivationResult => {
   //If it can't be activated, it returns a string saying why
+  //todo: maybe check for multiple reasons it can't be activated?
   if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
   if (card.level < ability.minLevel) return "Card not high enough level"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"

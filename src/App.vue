@@ -49,7 +49,7 @@
     elements: new Set(["Fire"]),
     level: 1,
     abilities: [{
-      name: "Search Any From Deck",
+      description: "Search Any From Deck",
       minLevel: 1,
       limitPerTurn: 1,
       sendTo: "GY",
@@ -63,7 +63,7 @@
         return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
       }
     }, {
-      name: "Search Any From GY",
+      description: "Search Any From GY",
       minLevel: 1,
       limitPerTurn: 1,
       sendTo: "GY",
@@ -86,7 +86,7 @@
     elements: new Set(["Water", "Dark"]),
     level: 3,
     abilities: [{
-      name: "Summon",
+      description: "Summon",
       minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Hand",
@@ -94,7 +94,7 @@
       getStateChanges: () => []
     },
     {
-      name: "Draw 2",
+      description: "Draw 2",
       minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Field",
@@ -110,7 +110,7 @@
     elements: new Set(["Wind", "Dark"]),
     level: 2,
     abilities: [{
-      name: "Summon this and send a Raidraptor from your Deck to the GY",
+      description: "Summon this and send a Raidraptor from your Deck to the GY",
       minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Hand",
@@ -135,7 +135,7 @@
     elements: new Set(["Wind", "Dark"]),
     level: 1,
     abilities: [{
-      name: "Summon this if all monsters on the field are Raidraptors (minimum 1)",
+      description: "Summon this if all monsters on the field are Raidraptors (minimum 1)",
       minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Hand",
@@ -184,18 +184,14 @@
     if (mode.value.type !== "Choosing Ability") throw new Error(`UI ERROR: Called tryAbility while ui is in '${mode.value.type}' mode`)
     const card = mode.value.card
     const activationResult = isAbilityActivatable(game.value, card, ability)
-    if (activationResult !== "OK") {
-      //didn't work
-      alert(activationResult)
+    if (activationResult !== "OK") return
+    if (ability.targeting) {
+      //if ability targets, set ui to targeting mode
+      mode.value = {type: "Choosing Targets", card, ability}
     } else {
-      if (ability.targeting) {
-        //if ability targets, set ui to targeting mode
-        mode.value = {type: "Choosing Targets", card, ability}
-      } else {
-        //if it doesn't target, go ahead and activate
-        const result = applyEffect(game.value, mode.value.card, ability, [])
-        finalizeResult(result)
-      }
+      //if it doesn't target, go ahead and activate
+      const result = applyEffect(game.value, mode.value.card, ability, [])
+      finalizeResult(result)
     }
   }
 

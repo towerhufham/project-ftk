@@ -1,14 +1,18 @@
 <template>
   <div class="modal" @click.self="emit('cancel')">
     <div class="holder">
-      <p>Choose ability:</p>
+      <p id="intro-text">Choose ability:</p>
+      <p id="error">
+        <span v-if="errorMessage !== 'OK' && errorMessage !== ''">{{ errorMessage }}</span>
+        <span >&nbsp;</span>
+      </p>
       <div 
         v-for="ability of props.card.abilities" 
-        @click="emit('select', ability)" 
-        class="ability-button"
+        @click="emit('select', ability)" @mouseenter="errorMessage = isAbilityActivatable(game, card, ability)"
+        @mouseleave="errorMessage = ''" class="ability-button"
         :class="{'activatable': canActivateAbility(ability)}"
       >
-        <p>◆{{ability.name}}</p>
+        <p>◆{{ability.description}}</p>
       </div>
     </div>
   </div>
@@ -17,6 +21,7 @@
 <script setup lang="ts">
   import type { CardInstance, GameState, Ability } from "./game"
   import { isAbilityActivatable } from "./game"
+  import { ref } from "vue"
 
   const props = defineProps<{
     game: GameState
@@ -27,6 +32,8 @@
     cancel: [],
     select: [ability: Ability]
   }>()
+
+  const errorMessage = ref("")
 
   const canActivateAbility = (ability: Ability) => {
     return (isAbilityActivatable(props.game, props.card, ability) === "OK")
@@ -47,6 +54,13 @@
   }
   .modal p {
     font-family: "Jost", sans-serif;
+  }
+  #intro-text {
+    margin-bottom: 0;
+  }
+  #error {
+    margin: 0;
+    color: red;
   }
   .holder {
     background-color: white;

@@ -18,6 +18,9 @@
   import { getValidAbilityTargets, getCardZone } from "./game"
   import { computed } from "vue"
 
+  //todo: make cards not hover if they're activatable
+  //also probably should show deck as sorted
+
   const props = defineProps<{
     game: GameState
     card: CardInstance
