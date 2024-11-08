@@ -1,6 +1,8 @@
 //todo: use CardInstance instead of iid in most functions (not a big deal though)
 //todo: make the arguments for effects a single object?
 
+import { shuffle } from "./utils"
+
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
 //making it an as const array instead of a union type makes it iteratable
@@ -19,7 +21,12 @@ export type Ability = {
     //todo: multitarget
     //notice that the arguments for this function and getStateChanges are almost identical
     isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => boolean
-    canSelfTarget: boolean //might not be that useful
+    canSelfTarget: boolean //might not be that useful, could be optional
+    // todo: requiredTargetZone (optional)
+    // todo: canTargetWithSameName (would be part of the above I guess)
+    // todo: theres an opportunity for a hook in the effect logic, since the same logic will usually always be applied equally to each target
+    // todo: simple "target must be" field with a partial of a CardInstance (get gpt to help write this)
+
   }
   getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
 } 
@@ -96,13 +103,13 @@ export const initGame = (decklist: CardDefinition[]): GameState => {
     (acc, definition, index) => [...acc, instantiateCard(definition, index)],
     [] as CardInstance[]
   )
-  //TODO: shuffle
+  const shuffledInstances = shuffle(instances)
   return {
-    nextiid: instances.length,
+    nextiid: shuffledInstances.length,
     board: {
       ...emptyBoard(),
-      "Hand": instances.slice(0, 5),
-      "Deck": instances.slice(5)
+      "Hand": shuffledInstances.slice(0, 5),
+      "Deck": shuffledInstances.slice(5)
     },
     moves: 0,
     history: [],

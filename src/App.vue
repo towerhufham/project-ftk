@@ -104,6 +104,51 @@
     flavor: "Beta test go!!"
   }
 
+  const rr1: CardDefinition = {
+    name: "Raidraptor - Tribute Lanius",
+    collectionNumber: 10,
+    elements: new Set(["Wind", "Dark"]),
+    level: 2,
+    abilities: [{
+      name: "Summon this and send a Raidraptor from your Deck to the GY",
+      minLevel: 1,
+      limitPerTurn: 1,
+      onlyFrom: "Hand",
+      sendTo: "Field",
+      targeting: {
+        canSelfTarget: false,
+        isCardValidTarget: (game, thisCard, target) => {
+          return (getCardZone(game, target.iid) === "Deck" && target.name.includes("Raidraptor"))
+        }
+      },
+      getStateChanges: (game, card, targetCards) => {
+        return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "GY"}})
+      }
+    }],
+    power: 200,
+    flavor: "rr1"
+  }
+
+  const rr2: CardDefinition = {
+    name: "Raidraptor - Heel Eagle",
+    collectionNumber: 11,
+    elements: new Set(["Wind", "Dark"]),
+    level: 1,
+    abilities: [{
+      name: "Summon this if all monsters on the field are Raidraptors (minimum 1)",
+      minLevel: 1,
+      limitPerTurn: 1,
+      onlyFrom: "Hand",
+      sendTo: "Field",
+      condition: (game, card) => {
+        return (game.board.Field.length > 0 && game.board.Field.every(c => c.name.includes("Raidraptor")))
+      },
+      getStateChanges: () => []
+    }],
+    power: 200,
+    flavor: "rr2"
+  }
+
   //----------------- END TESTING --------------------//
 
 
@@ -123,6 +168,7 @@
   const game = ref(initGame([
     def1, def1, def1, def1, def1, 
     def2, def2, def2, def2, def2,
+    rr1, rr1, rr1, rr2, rr2, rr2
   ]))
 
   const cardClickHandler = (card: CardInstance) => {
