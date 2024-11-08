@@ -1,5 +1,5 @@
 //todo: use CardInstance instead of iid in most functions (not a big deal though)
-//todo: make the arguments for effects a single object
+//todo: make the arguments for effects a single object?
 
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
@@ -8,7 +8,8 @@ const ALL_ZONES = ["Hand", "Deck", "Deleted", "Field", "GY"] as const
 export type Zone = typeof ALL_ZONES[number]
 
 export type Ability = {
-  name: string,
+  name: string
+  minLevel: number
   limitPerTurn: number | "Unlimited"
   onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange
@@ -242,15 +243,16 @@ export const getValidAbilityTargets = (game: GameState, card: CardInstance, abil
   return (ability.targeting.canSelfTarget) ? valid : valid.filter(c => c !== card)
 }
 
-type ActivationResult = "OK" | "Hit ability limit for this turn" | "Card condition not met" | "Card not in the right zone" | "Ability has no valid targets"
+type ActivationResult = "OK" | "Hit ability limit for this turn" | "Card condition not met" 
+  | "Card not in the right zone" | "Ability has no valid targets" | "Card not high enough level"
 
 export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): ActivationResult => {
   //If it can't be activated, it returns a string saying why
   if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
+  if (card.level < ability.minLevel) return "Card not high enough level"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
   if (ability.targeting && getValidAbilityTargets(game, card, ability).length === 0) return "Ability has no valid targets"
-  //todo: check for valid targets (and if there are none, return an error string)
   return "OK"
 }
 

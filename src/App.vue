@@ -50,6 +50,7 @@
     level: 1,
     abilities: [{
       name: "Search Any From Deck",
+      minLevel: 1,
       limitPerTurn: 1,
       sendTo: "GY",
       targeting: {
@@ -63,6 +64,7 @@
       }
     }, {
       name: "Search Any From GY",
+      minLevel: 1,
       limitPerTurn: 1,
       sendTo: "GY",
       targeting: {
@@ -85,6 +87,7 @@
     level: 3,
     abilities: [{
       name: "Summon",
+      minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Hand",
       sendTo: "Field",
@@ -92,6 +95,7 @@
     },
     {
       name: "Draw 2",
+      minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Field",
       getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
