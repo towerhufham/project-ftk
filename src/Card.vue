@@ -21,7 +21,7 @@
   }>()
 
   const hasActivatableAbility = computed(() => {
-    return props.card.abilities.map(a => isAbilityActivatable(props.game, props.card, a)).some(val => val === true)
+    return props.card.abilities.map(a => isAbilityActivatable(props.game, props.card, a)).some(val => val === "OK")
   })
 </script>
 

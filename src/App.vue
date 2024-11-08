@@ -133,10 +133,10 @@
   const tryAbility = (ability: Ability) => {
     if (mode.value.type !== "Choosing Ability") throw new Error(`UI ERROR: Called tryAbility while ui is in '${mode.value.type}' mode`)
     const card = mode.value.card
-    const activatable = isAbilityActivatable(game.value, card, ability)
-    if (typeof activatable === "string") {
+    const activationResult = isAbilityActivatable(game.value, card, ability)
+    if (activationResult !== "OK") {
       //didn't work
-      alert(activatable)
+      alert(activationResult)
     } else {
       if (ability.targeting) {
         //if ability targets, set ui to targeting mode

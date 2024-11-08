@@ -1,6 +1,5 @@
-//todo: use CardInstance instead of iid in most functions
-//todo: make the arguments for effects a single object 
-//todo: isAbilityActivatable shouldn't return a string because strings and truthy, or rather, it should return an "OK" string
+//todo: use CardInstance instead of iid in most functions (not a big deal though)
+//todo: make the arguments for effects a single object
 
 export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
@@ -243,18 +242,20 @@ export const getValidAbilityTargets = (game: GameState, card: CardInstance, abil
   return (ability.targeting.canSelfTarget) ? valid : valid.filter(c => c !== card)
 }
 
-export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): true | string => {
+type ActivationResult = "OK" | "Hit ability limit for this turn" | "Card condition not met" | "Card not in the right zone" | "Ability has no valid targets"
+
+export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): ActivationResult => {
   //If it can't be activated, it returns a string saying why
   if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
   if (ability.targeting && getValidAbilityTargets(game, card, ability).length === 0) return "Ability has no valid targets"
   //todo: check for valid targets (and if there are none, return an error string)
-  return true
+  return "OK"
 }
 
 export const applyEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
-  if (isAbilityActivatable(game, card, ability) !== true) throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
+  if (isAbilityActivatable(game, card, ability) !== "OK") throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
   //todo: plug targets into function (replacing the [])
   const stateChanges = ability.getStateChanges(game, card, targets)
   //if the ability has a sendTo, add it to the changes

@@ -29,7 +29,7 @@
   }>()
 
   const canActivateAbility = (ability: Ability) => {
-    return (isAbilityActivatable(props.game, props.card, ability) === true)
+    return (isAbilityActivatable(props.game, props.card, ability) === "OK")
   }
 </script>
 
