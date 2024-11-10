@@ -6,14 +6,18 @@
         <span v-if="errorMessage !== 'OK' && errorMessage !== ''">{{ errorMessage }}</span>
         <span >&nbsp;</span>
       </p>
-      <div 
-        v-for="ability of props.card.abilities" 
-        @click="emit('select', ability)" @mouseenter="errorMessage = isAbilityActivatable(game, card, ability)"
-        @mouseleave="errorMessage = ''" class="ability-button"
-        :class="{'activatable': canActivateAbility(ability)}"
-      >
-        <p>◆{{ability.description}}</p>
-      </div>
+      <template v-for="ability of props.card.abilities" >
+        <div v-if="ability.activationType.type === 'Manual'"
+          @click="emit('select', ability)" @mouseenter="errorMessage = isAbilityActivatable(game, card, ability)"
+          @mouseleave="errorMessage = ''" class="ability-button"
+          :class="{'activatable': canActivateAbility(ability)}"
+        >
+          <p>◆{{ ability.description }}</p>
+        </div>
+        <div v-else class="trigger">
+          <p>◇{{ ability.description }}</p>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -95,5 +99,12 @@
   .ability-button:not(.activatable) {
     background-color: lightgrey;
     cursor: unset;
+  }
+  .trigger {
+    border: solid 5px gray;
+    color: gray;
+    padding: 0 10px;
+    transition: all 0.25s;
+    width: 50%;
   }
 </style>

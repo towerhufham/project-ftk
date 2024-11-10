@@ -39,7 +39,7 @@
   import TargetChooser from "./TargetChooser.vue"
 
   import type { Ability, CardDefinition, CardInstance, GameState } from "./game"
-  import { initGame, applyEffect, isAbilityActivatable, getCardZone } from "./game"
+  import { initGame, applyManualEffect, isAbilityActivatable, getCardZone } from "./game"
 
   //----------------- TESTING --------------------//
 
@@ -53,6 +53,7 @@
       minLevel: 1,
       limitPerTurn: 1,
       sendTo: "GY",
+      activationType: {type: "Manual"},
       targeting: {
         canSelfTarget: false,
         isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => {
@@ -63,19 +64,11 @@
         return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
       }
     }, {
-      description: "Search Any From GY",
+      description: "Draw 1 card when this enters the GY",
       minLevel: 1,
       limitPerTurn: 1,
-      sendTo: "GY",
-      targeting: {
-        canSelfTarget: false,
-        isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => {
-          return (getCardZone(game, target.iid) === "GY")
-        }
-      },
-      getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => {
-        return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
-      }
+      activationType: {type: "Zone Trigger", zone: "GY"},
+      getStateChanges: () => [{type: "Draw Card"}]
     }],
     power: 100,
     flavor: "Alpha test go!"
@@ -91,6 +84,7 @@
       limitPerTurn: 1,
       onlyFrom: "Hand",
       sendTo: "Field",
+      activationType: {type: "Manual"},
       getStateChanges: () => []
     },
     {
@@ -98,6 +92,7 @@
       minLevel: 1,
       limitPerTurn: 1,
       onlyFrom: "Field",
+      activationType: {type: "Manual"},
       getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
     }],
     power: 200,
@@ -115,6 +110,7 @@
       limitPerTurn: 1,
       onlyFrom: "Hand",
       sendTo: "Field",
+      activationType: {type: "Manual"},
       targeting: {
         canSelfTarget: false,
         isCardValidTarget: (game, thisCard, target) => {
@@ -140,6 +136,7 @@
       limitPerTurn: 1,
       onlyFrom: "Hand",
       sendTo: "Field",
+      activationType: {type: "Manual"},
       condition: (game, card) => {
         return (game.board.Field.length > 0 && game.board.Field.every(c => c.name.includes("Raidraptor")))
       },
@@ -190,14 +187,14 @@
       mode.value = {type: "Choosing Targets", card, ability}
     } else {
       //if it doesn't target, go ahead and activate
-      const result = applyEffect(game.value, mode.value.card, ability, [])
+      const result = applyManualEffect(game.value, mode.value.card, ability, [])
       finalizeResult(result)
     }
   }
 
   const executeAbilityWithTargets = (targets: CardInstance[]) => {
     if (mode.value.type !== "Choosing Targets") throw new Error(`UI ERROR: Called executeAbilityWithTargets while ui is in '${mode.value.type}' mode`)
-    const result = applyEffect(game.value, mode.value.card, mode.value.ability, targets)
+    const result = applyManualEffect(game.value, mode.value.card, mode.value.ability, targets)
     finalizeResult(result)
   }
 

@@ -15,6 +15,10 @@ export type Ability = {
   limitPerTurn: number | "Unlimited"
   onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange
+  activationType: {type: "Manual"} | {
+    type: "Zone Trigger"
+    zone: Zone
+  }
   condition?: (game: GameState, card: CardInstance) => boolean
   targeting?: {
     //for now assume only 1 target
@@ -85,6 +89,7 @@ export type GameState = {
   moves: number
   history: StateChange[]
   interactionState: {type: "Standby"} | {type: "Targeting", card: CardInstance, ability: Ability}
+  stateChangeQueue: StateChange[]
 }
 
 const emptyBoard = (): Record<Zone, CardInstance[]> => {
@@ -113,7 +118,8 @@ export const initGame = (decklist: CardDefinition[]): GameState => {
     },
     moves: 0,
     history: [],
-    interactionState: {type: "Standby"}
+    interactionState: {type: "Standby"},
+    stateChangeQueue: []
   }
 }
 
@@ -195,51 +201,6 @@ const editCardInstance = (game: GameState, iid: number, key: string, val: unknow
   }
 }
 
-const getAbilityUses = (game: GameState, iid: number, ability: Ability): number => {
-  const card = getCardInstance(game, iid)
-  const index = card.abilities.findIndex(a => a === ability)
-  return card.abilityUses[index]
-}
-const incrementAbilityUse = (game: GameState, iid: number, ability: Ability): GameState => {
-  const card = getCardInstance(game, iid)
-  const index = card.abilities.findIndex(a => a === ability)
-  const newCount = card.abilityUses[index] + 1
-  const newAbilityUses = card.abilityUses.map((element, i) => {
-    return (i === index) ? newCount : element
-  })
-  return editCardInstance(game, iid, "abilityUses", newAbilityUses)
-}
-
-const applyStateChange = (game: GameState, sc: StateChange): GameState => {
-  switch (sc.type) {
-    case "Draw Card": {
-      if (game.board.Deck.length < 1) return game 
-      const topDeck = game.board.Deck[0].iid
-      return moveCard(game, topDeck, "Hand")
-    }
-    case "Spawn Card": {
-      return spawnCardIntoGame(game, sc.definition, sc.toZone)
-    }
-    case "Move Card": {
-      return moveCard(game, sc.iid, sc.toZone)
-    }
-    case "Change Elements": {
-      return editCardInstance(game, sc.iid, "elements", sc.newElements)
-    }
-    case "Change Level": {
-      return editCardInstance(game, sc.iid, "level", sc.newLevel)
-    }
-    case "Change Power": {
-      return editCardInstance(game, sc.iid, "power", sc.newPower)
-    }
-  }
-}
-
-const applyStateChanges = (game: GameState, changes: StateChange[]): GameState => {
-  //simple helper
-  return changes.reduce((state, stateChange) => applyStateChange(state, stateChange), game)
-}
-
 const getAllCards = (game: GameState): CardInstance[] => {
   return ALL_ZONES.reduce((acc, zone) => [...acc, ...game.board[zone]], [] as CardInstance[])
 }
@@ -264,17 +225,103 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
   return "OK"
 }
 
-export const applyEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
+export const applyManualEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
   if (isAbilityActivatable(game, card, ability) !== "OK") throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
-  //todo: plug targets into function (replacing the [])
+  if (ability.activationType.type !== "Manual") throw new Error (`GAME ERROR: Calling applyManualEffect on mon-manual ability '${ability.description}'`)
   const stateChanges = ability.getStateChanges(game, card, targets)
   //if the ability has a sendTo, add it to the changes
-  const withSendTo = ability.sendTo ? applyStateChanges(game, [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}])
-                                    : applyStateChanges(game, stateChanges)
-  const result = incrementAbilityUse(withSendTo, card.iid, ability)
+  const fullStateChanges: StateChange[] = ability.sendTo ? [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}] : stateChanges
+  //WORKING
+  const updatedQueue = addStateChangesToQueue(game, fullStateChanges)
+  const updatedGame = workThroughStateChangeQueue(updatedQueue)
+  const result = incrementAbilityUse(updatedGame, card.iid, ability)
   return {
     ...result,
     moves: game.moves + 1,
     history: [...game.history, ...stateChanges]
   }
+}
+
+const getAbilityUses = (game: GameState, iid: number, ability: Ability): number => {
+  const card = getCardInstance(game, iid)
+  const index = card.abilities.findIndex(a => a === ability)
+  return card.abilityUses[index]
+}
+const incrementAbilityUse = (game: GameState, iid: number, ability: Ability): GameState => {
+  const card = getCardInstance(game, iid)
+  const index = card.abilities.findIndex(a => a === ability)
+  const newCount = card.abilityUses[index] + 1
+  const newAbilityUses = card.abilityUses.map((element, i) => {
+    return (i === index) ? newCount : element
+  })
+  return editCardInstance(game, iid, "abilityUses", newAbilityUses)
+}
+
+const checkForMoveTriggers = (game: GameState, card: CardInstance, to: Zone): Ability[] => {
+  //this is called when the card moves zone
+  //if multiple triggers could be activated, return them all
+  return card.abilities.filter(
+    a => a.activationType.type === "Zone Trigger" 
+    && a.activationType.zone === to 
+    && isAbilityActivatable(game, card, a) === "OK")
+}
+
+const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
+  //todo: this probably needs some refactoring
+  //pop the first change off the queue
+  const sc = gameWithFullQueue.stateChangeQueue[0]
+  const game = {
+    ...gameWithFullQueue,
+    stateChangeQueue: gameWithFullQueue.stateChangeQueue.slice(1)
+  }
+  switch (sc.type) {
+    case "Draw Card": {
+      if (game.board.Deck.length < 1) return game 
+      const topDeck = game.board.Deck[0].iid
+      return moveCard(game, topDeck, "Hand")
+    }
+    case "Spawn Card": {
+      return spawnCardIntoGame(game, sc.definition, sc.toZone)
+    }
+    case "Move Card": {
+      const newGame =  moveCard(game, sc.iid, sc.toZone)
+      const card = getCardInstance(newGame, sc.iid) 
+      //check for triggers
+      const triggers = checkForMoveTriggers(newGame, card, sc.toZone)
+      //TODO: make sendTo work (need to extract some logic from applyManualEffect, probably not a biggie)
+      //TODO: set up targeting (will need to use game.interactionState)
+      const triggerChanges = triggers.reduce((changes, trigger) => [...changes, ...trigger.getStateChanges(newGame, card, [])], [] as StateChange[])
+      console.log(triggerChanges)
+      return addStateChangesToQueue(newGame, triggerChanges)
+    }
+    case "Change Elements": {
+      return editCardInstance(game, sc.iid, "elements", sc.newElements)
+    }
+    case "Change Level": {
+      return editCardInstance(game, sc.iid, "level", sc.newLevel)
+    }
+    case "Change Power": {
+      return editCardInstance(game, sc.iid, "power", sc.newPower)
+    }
+  }
+}
+
+const addStateChangesToQueue = (game: GameState, changes: StateChange[]): GameState => {
+  //failsafe for uncontrollable, automatically infinite combos
+  if ([...changes, ...game.stateChangeQueue].length > 100) {
+    console.log("GAME WARNING: 100+ StateChanges trying to be added to the queue, aborting!")
+    return game
+    //TODO: this won't work until there's a kind of "lockdown" boolean on GameState to prevent adding more SCs after it lowers back down < 100
+  }
+  return {
+    ...game,
+    stateChangeQueue: [...changes, ...game.stateChangeQueue]
+  }
+}
+
+export const workThroughStateChangeQueue = (game: GameState): GameState => {
+  if (game.stateChangeQueue.length === 0) return game
+  const newGame = applyTopStateChange(game)
+  //todo: check for triggers, will need to use game.interactionState
+  return workThroughStateChangeQueue(newGame)
 }
