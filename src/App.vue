@@ -38,7 +38,7 @@
   import AbilityChooser from "./AbilityChooser.vue"
   import TargetChooser from "./TargetChooser.vue"
 
-  import type { Ability, CardDefinition, CardInstance, GameState, AbilityContext } from "./game"
+  import type { Ability, CardDefinition, CardInstance, GameState } from "./game"
   import { initGame, applyManualEffect, isAbilityActivatable, getCardZone } from "./game"
 
   //----------------- TESTING --------------------//
@@ -68,7 +68,7 @@
       minLevel: 1,
       limitPerTurn: 1,
       activationType: {type: "Zone Trigger", zone: "GY"},
-      sendTo: "Deleted",
+      sendTo: "GY",
       getStateChanges: () => [{type: "Draw Card"}]
     }],
     power: 100,

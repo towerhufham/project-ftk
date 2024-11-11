@@ -96,6 +96,7 @@ export type GameState = {
   history: StateChange[]
   interactionState: {type: "Standby"} | {type: "Targeting", card: CardInstance, ability: Ability}
   stateChangeQueue: StateChange[]
+  activeTriggerCount: number //used to difuse automatic, game-crashing infinite combos
 }
 
 const emptyBoard = (): Record<Zone, CardInstance[]> => {
@@ -125,7 +126,8 @@ export const initGame = (decklist: CardDefinition[]): GameState => {
     moves: 0,
     history: [],
     interactionState: {type: "Standby"},
-    stateChangeQueue: []
+    stateChangeQueue: [],
+    activeTriggerCount: 0
   }
 }
 
@@ -303,8 +305,11 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
         ...changes, 
         ...getFullStateChanges(trigger, {game: newGame, card, targets: []})
       ], [] as StateChange[])
-      console.log(triggerChanges)
-      return addStateChangesToQueue(newGame, triggerChanges)
+      const newGameWithTriggerCount = {
+        ...newGame,
+        activeTriggerCount: newGame.activeTriggerCount + triggers.length
+      }
+      return addStateChangesToQueue(newGameWithTriggerCount, triggerChanges)
     }
     case "Change Elements": {
       return editCardInstance(game, sc.iid, "elements", sc.newElements)
@@ -320,10 +325,9 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
 
 const addStateChangesToQueue = (game: GameState, changes: StateChange[]): GameState => {
   //failsafe for uncontrollable, automatically infinite combos
-  if ([...changes, ...game.stateChangeQueue].length > 100) {
-    console.log("GAME WARNING: 100+ StateChanges trying to be added to the queue, aborting!")
+  if (game.activeTriggerCount > 100) {
+    console.log("activeTriggerCount has gone over 100, no new triggers can be added!")
     return game
-    //TODO: this won't work until there's a kind of "lockdown" boolean on GameState to prevent adding more SCs after it lowers back down < 100
   }
   return {
     ...game,
@@ -332,8 +336,13 @@ const addStateChangesToQueue = (game: GameState, changes: StateChange[]): GameSt
 }
 
 export const workThroughStateChangeQueue = (game: GameState): GameState => {
-  if (game.stateChangeQueue.length === 0) return game
-  const newGame = applyTopStateChange(game)
-  //todo: check for targeting triggers, will need to use game.interactionState
-  return workThroughStateChangeQueue(newGame)
+  let currentGame = game
+  while (currentGame.stateChangeQueue.length > 0) {
+    currentGame = applyTopStateChange(currentGame)
+    //todo: check for targeting triggers, will need to use currentGame.interactionState
+  }
+  return {
+    ...currentGame,
+    activeTriggerCount: 0
+  }
 }
