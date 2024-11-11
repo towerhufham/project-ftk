@@ -32,8 +32,14 @@ export type Ability = {
     // todo: simple "target must be" field with a partial of a CardInstance (get gpt to help write this)
 
   }
-  getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => StateChange[]
+  getStateChanges: (ctx: AbilityContext) => StateChange[]
 } 
+
+export type AbilityContext = {
+  game: GameState
+  card: CardInstance
+  targets: CardInstance[]
+}
 
 export type CardDefinition = {
   collectionNumber: number
@@ -228,7 +234,7 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
 export const applyManualEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
   if (isAbilityActivatable(game, card, ability) !== "OK") throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
   if (ability.activationType.type !== "Manual") throw new Error (`GAME ERROR: Calling applyManualEffect on mon-manual ability '${ability.description}'`)
-  const stateChanges = ability.getStateChanges(game, card, targets)
+  const stateChanges = ability.getStateChanges({game, card, targets})
   //if the ability has a sendTo, add it to the changes
   const fullStateChanges: StateChange[] = ability.sendTo ? [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}] : stateChanges
   //WORKING
@@ -290,7 +296,7 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
       const triggers = checkForMoveTriggers(newGame, card, sc.toZone)
       //TODO: make sendTo work (need to extract some logic from applyManualEffect, probably not a biggie)
       //TODO: set up targeting (will need to use game.interactionState)
-      const triggerChanges = triggers.reduce((changes, trigger) => [...changes, ...trigger.getStateChanges(newGame, card, [])], [] as StateChange[])
+      const triggerChanges = triggers.reduce((changes, trigger) => [...changes, ...trigger.getStateChanges({game: newGame, card, targets: []})], [] as StateChange[])
       console.log(triggerChanges)
       return addStateChangesToQueue(newGame, triggerChanges)
     }
@@ -322,6 +328,6 @@ const addStateChangesToQueue = (game: GameState, changes: StateChange[]): GameSt
 export const workThroughStateChangeQueue = (game: GameState): GameState => {
   if (game.stateChangeQueue.length === 0) return game
   const newGame = applyTopStateChange(game)
-  //todo: check for triggers, will need to use game.interactionState
+  //todo: check for targeting triggers, will need to use game.interactionState
   return workThroughStateChangeQueue(newGame)
 }

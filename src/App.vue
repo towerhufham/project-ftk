@@ -38,7 +38,7 @@
   import AbilityChooser from "./AbilityChooser.vue"
   import TargetChooser from "./TargetChooser.vue"
 
-  import type { Ability, CardDefinition, CardInstance, GameState } from "./game"
+  import type { Ability, CardDefinition, CardInstance, GameState, AbilityContext } from "./game"
   import { initGame, applyManualEffect, isAbilityActivatable, getCardZone } from "./game"
 
   //----------------- TESTING --------------------//
@@ -60,8 +60,8 @@
           return (getCardZone(game, target.iid) === "Deck")
         }
       },
-      getStateChanges: (game: GameState, card: CardInstance, targetCards: CardInstance[]) => {
-        return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
       }
     }, {
       description: "Draw 1 card when this enters the GY",
@@ -117,8 +117,8 @@
           return (getCardZone(game, target.iid) === "Deck" && target.name.includes("Raidraptor"))
         }
       },
-      getStateChanges: (game, card, targetCards) => {
-        return targetCards.map(c => { return {type: "Move Card", iid: c.iid, toZone: "GY"}})
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "GY"}})
       }
     }],
     power: 200,
@@ -137,7 +137,7 @@
       onlyFrom: "Hand",
       sendTo: "Field",
       activationType: {type: "Manual"},
-      condition: (game, card) => {
+      condition: (game) => {
         return (game.board.Field.length > 0 && game.board.Field.every(c => c.name.includes("Raidraptor")))
       },
       getStateChanges: () => []
