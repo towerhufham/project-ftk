@@ -1,6 +1,7 @@
 <template>
   <div class="modal" @click.self="emit('cancel')">
     <div class="holder">
+      <p>({{ ability.description }})</p>
       <p>Choose target:</p>
       <div id="cards">
         <div class="card-holder" v-for="targetInfo of validTargets" >
