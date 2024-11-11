@@ -231,14 +231,18 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
   return "OK"
 }
 
+export const getFullStateChanges = (ability: Ability, ctx: AbilityContext): StateChange[] => {
+  //adds sendTo logic, might do more later
+  const stateChanges = ability.getStateChanges(ctx)
+  return ability.sendTo ? [...stateChanges, {type: "Move Card", iid: ctx.card.iid, toZone: ability.sendTo}] : stateChanges
+}
+
 export const applyManualEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
   if (isAbilityActivatable(game, card, ability) !== "OK") throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
   if (ability.activationType.type !== "Manual") throw new Error (`GAME ERROR: Calling applyManualEffect on mon-manual ability '${ability.description}'`)
-  const stateChanges = ability.getStateChanges({game, card, targets})
-  //if the ability has a sendTo, add it to the changes
-  const fullStateChanges: StateChange[] = ability.sendTo ? [...stateChanges, {type: "Move Card", iid: card.iid, toZone: ability.sendTo}] : stateChanges
+  const stateChanges = getFullStateChanges(ability, {game, card, targets})
   //WORKING
-  const updatedQueue = addStateChangesToQueue(game, fullStateChanges)
+  const updatedQueue = addStateChangesToQueue(game, stateChanges)
   const updatedGame = workThroughStateChangeQueue(updatedQueue)
   const result = incrementAbilityUse(updatedGame, card.iid, ability)
   return {
@@ -294,9 +298,11 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
       const card = getCardInstance(newGame, sc.iid) 
       //check for triggers
       const triggers = checkForMoveTriggers(newGame, card, sc.toZone)
-      //TODO: make sendTo work (need to extract some logic from applyManualEffect, probably not a biggie)
       //TODO: set up targeting (will need to use game.interactionState)
-      const triggerChanges = triggers.reduce((changes, trigger) => [...changes, ...trigger.getStateChanges({game: newGame, card, targets: []})], [] as StateChange[])
+      const triggerChanges = triggers.reduce((changes, trigger) => [
+        ...changes, 
+        ...getFullStateChanges(trigger, {game: newGame, card, targets: []})
+      ], [] as StateChange[])
       console.log(triggerChanges)
       return addStateChangesToQueue(newGame, triggerChanges)
     }

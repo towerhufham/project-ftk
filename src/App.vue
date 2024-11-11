@@ -64,10 +64,11 @@
         return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
       }
     }, {
-      description: "Draw 1 card when this enters the GY",
+      description: "Draw 1 card when this enters the GY, then delete this",
       minLevel: 1,
       limitPerTurn: 1,
       activationType: {type: "Zone Trigger", zone: "GY"},
+      sendTo: "Deleted",
       getStateChanges: () => [{type: "Draw Card"}]
     }],
     power: 100,
