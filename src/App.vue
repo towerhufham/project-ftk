@@ -64,12 +64,20 @@
         return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
       }
     }, {
-      description: "Draw 1 card when this enters the GY, then delete this",
+      description: "When this enters the GY, search 1 card and then delete this.",
       minLevel: 1,
       limitPerTurn: 1,
       activationType: {type: "Zone Trigger", zone: "GY"},
-      sendTo: "GY",
-      getStateChanges: () => [{type: "Draw Card"}]
+      sendTo: "Deleted",
+      targeting: {
+        canSelfTarget: false,
+        isCardValidTarget: (game, thisCard, target) => {
+          return (getCardZone(game, target.iid) === "Deck")
+        },
+      },
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+      }
     }],
     power: 100,
     flavor: "Alpha test go!"

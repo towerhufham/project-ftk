@@ -96,7 +96,8 @@ export type GameState = {
   history: StateChange[]
   interactionState: {type: "Standby"} | {type: "Targeting", card: CardInstance, ability: Ability}
   stateChangeQueue: StateChange[]
-  activeTriggerCount: number //used to difuse automatic, game-crashing infinite combos
+  triggerQueue: {ability: Ability, card: CardInstance}[]
+  triggerCount: number
 }
 
 const emptyBoard = (): Record<Zone, CardInstance[]> => {
@@ -127,7 +128,8 @@ export const initGame = (decklist: CardDefinition[]): GameState => {
     history: [],
     interactionState: {type: "Standby"},
     stateChangeQueue: [],
-    activeTriggerCount: 0
+    triggerQueue: [],
+    triggerCount: 0
   }
 }
 
@@ -300,16 +302,12 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
       const card = getCardInstance(newGame, sc.iid) 
       //check for triggers
       const triggers = checkForMoveTriggers(newGame, card, sc.toZone)
-      //TODO: set up targeting (will need to use game.interactionState)
-      const triggerChanges = triggers.reduce((changes, trigger) => [
-        ...changes, 
-        ...getFullStateChanges(trigger, {game: newGame, card, targets: []})
-      ], [] as StateChange[])
-      const newGameWithTriggerCount = {
+      const triggersWithCards = triggers.map(t => {return {ability: t, card}})
+      return {
         ...newGame,
-        activeTriggerCount: newGame.activeTriggerCount + triggers.length
+        triggerQueue: [...newGame.triggerQueue, ...triggersWithCards],
+        triggerCount: newGame.triggerCount + triggers.length
       }
-      return addStateChangesToQueue(newGameWithTriggerCount, triggerChanges)
     }
     case "Change Elements": {
       return editCardInstance(game, sc.iid, "elements", sc.newElements)
@@ -325,8 +323,8 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
 
 const addStateChangesToQueue = (game: GameState, changes: StateChange[]): GameState => {
   //failsafe for uncontrollable, automatically infinite combos
-  if (game.activeTriggerCount > 100) {
-    console.log("activeTriggerCount has gone over 100, no new triggers can be added!")
+  if (game.triggerCount > 100) {
+    console.log("triggerCount length has gone over 100, no new state changes can be added!")
     return game
   }
   return {
@@ -339,10 +337,19 @@ export const workThroughStateChangeQueue = (game: GameState): GameState => {
   let currentGame = game
   while (currentGame.stateChangeQueue.length > 0) {
     currentGame = applyTopStateChange(currentGame)
-    //todo: check for targeting triggers, will need to use currentGame.interactionState
+    while (currentGame.triggerQueue.length > 0) {
+      //pop the first trigger off the queue
+      const trigger = currentGame.triggerQueue[0]
+      //todo: check for targeting triggers, will need to use currentGame.interactionState
+      const triggerChanges = getFullStateChanges(trigger.ability, {game: currentGame, card: trigger.card, targets: []})
+      const newGame = addStateChangesToQueue(currentGame, triggerChanges)
+      currentGame = {
+        ...newGame,
+        triggerQueue: currentGame.triggerQueue.slice(1)
+      }
+    }
   }
   return {
-    ...currentGame,
-    activeTriggerCount: 0
+    ...currentGame
   }
 }
