@@ -203,13 +203,21 @@
 
   const executeAbilityWithTargets = (targets: CardInstance[]) => {
     if (mode.value.type !== "Choosing Targets") throw new Error(`UI ERROR: Called executeAbilityWithTargets while ui is in '${mode.value.type}' mode`)
+    //WORKING: this is where i left off
+    //this is currently being called on triggers, not necessarily just manual abilities
+    //need to either handle both cases here, or make a trigger-specific function and make this one manual-specific
     const result = applyManualEffect(game.value, mode.value.card, mode.value.ability, targets)
     finalizeResult(result)
   }
 
   const finalizeResult = (result: GameState) => {
+    //might need a better name (handleResult()?)
     game.value = result
-    mode.value = {type: "Standby"}
+    if (result.interactionState.type === "Standby") {
+      mode.value = {type: "Standby"}
+    } else if (result.interactionState.type === "Targeting") {
+      mode.value = {type: "Choosing Targets", card: result.interactionState.card, ability: result.interactionState.ability}
+    }
     console.log(game.value)
   }
 </script>

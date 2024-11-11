@@ -245,7 +245,6 @@ export const applyManualEffect = (game: GameState, card: CardInstance, ability: 
   if (isAbilityActivatable(game, card, ability) !== "OK") throw new Error ("GAME ERROR: calling applyEffect() on an ability that doesn't pass isAbilityActivatable()!")
   if (ability.activationType.type !== "Manual") throw new Error (`GAME ERROR: Calling applyManualEffect on mon-manual ability '${ability.description}'`)
   const stateChanges = getFullStateChanges(ability, {game, card, targets})
-  //WORKING
   const updatedQueue = addStateChangesToQueue(game, stateChanges)
   const updatedGame = workThroughStateChangeQueue(updatedQueue)
   const result = incrementAbilityUse(updatedGame, card.iid, ability)
@@ -335,12 +334,18 @@ const addStateChangesToQueue = (game: GameState, changes: StateChange[]): GameSt
 
 export const workThroughStateChangeQueue = (game: GameState): GameState => {
   let currentGame = game
+  let exit = false
   while (currentGame.stateChangeQueue.length > 0) {
     currentGame = applyTopStateChange(currentGame)
     while (currentGame.triggerQueue.length > 0) {
       //pop the first trigger off the queue
       const trigger = currentGame.triggerQueue[0]
       //todo: check for targeting triggers, will need to use currentGame.interactionState
+      if (trigger.ability.targeting) {
+        console.log("trigger needs targets")
+        exit = true
+        break
+      }
       const triggerChanges = getFullStateChanges(trigger.ability, {game: currentGame, card: trigger.card, targets: []})
       const newGame = addStateChangesToQueue(currentGame, triggerChanges)
       currentGame = {
@@ -348,8 +353,31 @@ export const workThroughStateChangeQueue = (game: GameState): GameState => {
         triggerQueue: currentGame.triggerQueue.slice(1)
       }
     }
+    if (exit) {
+      //pass to ui to declare targets
+      const ability = currentGame.triggerQueue[0]!.ability
+      const card = currentGame.triggerQueue[0]!.card
+      return {
+        ...currentGame,
+        interactionState: {type: "Targeting", card, ability}
+      }
+    }
   }
   return {
     ...currentGame
   }
+}
+
+export const resumeTopTriggerWithTargets = (game: GameState, targets: CardInstance[]) => {
+  if (game.triggerQueue.length < 1) throw new Error ("GAME ERROR: called resumeTopTriggerWithTargets() while trigger queue is empty!")
+  const ability = game.triggerQueue[0].ability
+  const card = game.triggerQueue[0].card
+  if (!ability.targeting) throw new Error (`GAME ERROR: called resumeTopTriggerWithTargets() even though trigger doesn't target: ${ability.description}`)
+  //the below is basically copy pasta from workThroughStateChangeQueue(), room for extraction prolly
+  const triggerChanges = getFullStateChanges(ability, {game, card, targets})
+  const newGame = addStateChangesToQueue(game, triggerChanges)
+  workThroughStateChangeQueue({
+    ...newGame,
+    triggerQueue: newGame.triggerQueue.slice(1)
+  })
 }
