@@ -39,7 +39,7 @@
   import TargetChooser from "./TargetChooser.vue"
 
   import type { Ability, CardDefinition, CardInstance, GameState } from "./game"
-  import { initGame, applyManualEffect, isAbilityActivatable, getCardZone } from "./game"
+  import { initGame, applyManualEffect, isAbilityActivatable, getCardZone, resumeTopTriggerWithTargets } from "./game"
 
   //----------------- TESTING --------------------//
 
@@ -203,15 +203,15 @@
 
   const executeAbilityWithTargets = (targets: CardInstance[]) => {
     if (mode.value.type !== "Choosing Targets") throw new Error(`UI ERROR: Called executeAbilityWithTargets while ui is in '${mode.value.type}' mode`)
-    //WORKING: this is where i left off
-    //this is currently being called on triggers, not necessarily just manual abilities
-    //need to either handle both cases here, or make a trigger-specific function and make this one manual-specific
-    const result = applyManualEffect(game.value, mode.value.card, mode.value.ability, targets)
+    //the function we call here differs if ability is manual or a trigger
+    const result = (mode.value.ability.activationType.type === "Manual")
+      ? applyManualEffect(game.value, mode.value.card, mode.value.ability, targets)
+      : resumeTopTriggerWithTargets(game.value, targets)
     finalizeResult(result)
   }
 
   const finalizeResult = (result: GameState) => {
-    //might need a better name (handleResult()?)
+    //might need a better name, handleResult()?
     game.value = result
     if (result.interactionState.type === "Standby") {
       mode.value = {type: "Standby"}

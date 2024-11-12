@@ -364,11 +364,12 @@ export const workThroughStateChangeQueue = (game: GameState): GameState => {
     }
   }
   return {
-    ...currentGame
+    ...currentGame,
+    interactionState: {type: "Standby"}
   }
 }
 
-export const resumeTopTriggerWithTargets = (game: GameState, targets: CardInstance[]) => {
+export const resumeTopTriggerWithTargets = (game: GameState, targets: CardInstance[]): GameState => {
   if (game.triggerQueue.length < 1) throw new Error ("GAME ERROR: called resumeTopTriggerWithTargets() while trigger queue is empty!")
   const ability = game.triggerQueue[0].ability
   const card = game.triggerQueue[0].card
@@ -376,7 +377,7 @@ export const resumeTopTriggerWithTargets = (game: GameState, targets: CardInstan
   //the below is basically copy pasta from workThroughStateChangeQueue(), room for extraction prolly
   const triggerChanges = getFullStateChanges(ability, {game, card, targets})
   const newGame = addStateChangesToQueue(game, triggerChanges)
-  workThroughStateChangeQueue({
+  return workThroughStateChangeQueue({
     ...newGame,
     triggerQueue: newGame.triggerQueue.slice(1)
   })
