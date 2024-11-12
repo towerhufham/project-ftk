@@ -80,9 +80,8 @@ export type StateChange = {
   iid: number
   newElements: Set<Elemental>
 } | {
-  type: "Change Level"
+  type: "Level Up"
   iid: number
-  newLevel: number
 } | {
   type: "Change Power"
   iid: number
@@ -229,8 +228,8 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
   //todo: maybe check for multiple reasons it can't be activated?
   if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
   if (card.level < ability.minLevel) return "Card not high enough level"
-  if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
+  if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.targeting && getValidAbilityTargets(game, card, ability).length === 0) return "Ability has no valid targets"
   return "OK"
 }
@@ -311,8 +310,9 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
     case "Change Elements": {
       return editCardInstance(game, sc.iid, "elements", sc.newElements)
     }
-    case "Change Level": {
-      return editCardInstance(game, sc.iid, "level", sc.newLevel)
+    case "Level Up": {
+      const card = getCardInstance(game, sc.iid) 
+      return editCardInstance(game, sc.iid, "level", card.level + 1)
     }
     case "Change Power": {
       return editCardInstance(game, sc.iid, "power", sc.newPower)

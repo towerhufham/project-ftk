@@ -43,74 +43,74 @@
 
   //----------------- TESTING --------------------//
 
-  const def1: CardDefinition = {
-    name: "Alpha",
-    collectionNumber: 0,
-    elements: new Set(["Fire"]),
-    level: 1,
-    abilities: [{
-      description: "Search Any From Deck",
-      minLevel: 1,
-      limitPerTurn: 1,
-      sendTo: "GY",
-      activationType: {type: "Manual"},
-      targeting: {
-        canSelfTarget: false,
-        isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => {
-          return (getCardZone(game, target.iid) === "Deck")
-        }
-      },
-      getStateChanges: (ctx) => {
-        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
-      }
-    }, {
-      description: "When this enters the GY, search 1 card and then delete this.",
-      minLevel: 1,
-      limitPerTurn: 1,
-      activationType: {type: "Zone Trigger", zone: "GY"},
-      sendTo: "Deleted",
-      targeting: {
-        canSelfTarget: false,
-        isCardValidTarget: (game, thisCard, target) => {
-          return (getCardZone(game, target.iid) === "Deck")
-        },
-      },
-      getStateChanges: (ctx) => {
-        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
-      }
-    }],
-    power: 100,
-    flavor: "Alpha test go!"
-  } 
-  const def2: CardDefinition = {
-    name: "Beta",
-    collectionNumber: 1,
-    elements: new Set(["Water", "Dark"]),
-    level: 3,
-    abilities: [{
-      description: "Summon",
-      minLevel: 1,
-      limitPerTurn: 1,
-      onlyFrom: "Hand",
-      sendTo: "Field",
-      activationType: {type: "Manual"},
-      getStateChanges: () => []
-    },
-    {
-      description: "Draw 2",
-      minLevel: 1,
-      limitPerTurn: 1,
-      onlyFrom: "Field",
-      activationType: {type: "Manual"},
-      getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
-    }],
-    power: 200,
-    flavor: "Beta test go!!"
-  }
+  // const def1: CardDefinition = {
+  //   name: "Alpha",
+  //   collectionNumber: 0,
+  //   elements: new Set(["Fire"]),
+  //   level: 1,
+  //   abilities: [{
+  //     description: "Search Any From Deck",
+  //     minLevel: 1,
+  //     limitPerTurn: 1,
+  //     sendTo: "GY",
+  //     activationType: {type: "Manual"},
+  //     targeting: {
+  //       canSelfTarget: false,
+  //       isCardValidTarget: (game: GameState, thisCard: CardInstance, target: CardInstance) => {
+  //         return (getCardZone(game, target.iid) === "Deck")
+  //       }
+  //     },
+  //     getStateChanges: (ctx) => {
+  //       return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+  //     }
+  //   }, {
+  //     description: "When this enters the GY, search 1 card and then delete this.",
+  //     minLevel: 1,
+  //     limitPerTurn: 1,
+  //     activationType: {type: "Zone Trigger", zone: "GY"},
+  //     sendTo: "Deleted",
+  //     targeting: {
+  //       canSelfTarget: false,
+  //       isCardValidTarget: (game, thisCard, target) => {
+  //         return (getCardZone(game, target.iid) === "Deck")
+  //       },
+  //     },
+  //     getStateChanges: (ctx) => {
+  //       return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+  //     }
+  //   }],
+  //   power: 100,
+  //   flavor: "Alpha test go!"
+  // } 
+  // const def2: CardDefinition = {
+  //   name: "Beta",
+  //   collectionNumber: 1,
+  //   elements: new Set(["Water", "Dark"]),
+  //   level: 3,
+  //   abilities: [{
+  //     description: "Summon",
+  //     minLevel: 1,
+  //     limitPerTurn: 1,
+  //     onlyFrom: "Hand",
+  //     sendTo: "Field",
+  //     activationType: {type: "Manual"},
+  //     getStateChanges: () => []
+  //   },
+  //   {
+  //     description: "Draw 2",
+  //     minLevel: 1,
+  //     limitPerTurn: 1,
+  //     onlyFrom: "Field",
+  //     activationType: {type: "Manual"},
+  //     getStateChanges: () => [{type: "Draw Card"}, {type: "Draw Card"}]
+  //   }],
+  //   power: 200,
+  //   flavor: "Beta test go!!"
+  // }
 
   const rr1: CardDefinition = {
     name: "Raidraptor - Tribute Lanius",
-    collectionNumber: 10,
+    collectionNumber: 1,
     elements: new Set(["Wind", "Dark"]),
     level: 2,
     abilities: [{
@@ -135,8 +135,142 @@
   }
 
   const rr2: CardDefinition = {
+    name: "Raidraptor - Mimicry Lanius",
+    collectionNumber: 2,
+    elements: new Set(["Holy", "Dark"]),
+    level: 2,
+    abilities: [{
+      description: "When this enters the field, all Raidraptor cards that were already on the field level up.",
+      minLevel: 1,
+      limitPerTurn: 1,
+      activationType: {type: "Zone Trigger", zone: "Field"},
+      getStateChanges: (ctx) => {
+        const rrOnField = ctx.game.board.Field.filter(c => c.name.includes("Raidraptor"))
+        return rrOnField.map(c => { return {type: "Level Up", iid: c.iid}})
+      }
+    }, {
+      description: "Delete this from the GY, search 1 Raidraptor",
+      minLevel: 1,
+      limitPerTurn: 1,
+      activationType: {type: "Manual"},
+      onlyFrom: "GY",
+      sendTo: "Deleted",
+      targeting: {
+        canSelfTarget: false,
+        isCardValidTarget: (game, thisCard, target) => {
+          return (getCardZone(game, target.iid) === "Deck" && target.name.includes("Raidraptor"))
+        }
+      },
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+      }
+    }],
+    power: 200,
+    flavor: "rr2"
+  }
+
+  const rr3: CardDefinition = {
+    name: "Raidraptor - Strangle Lanius",
+    collectionNumber: 3,
+    elements: new Set(["Stone", "Dark"]),
+    level: 2,
+    abilities: [{
+      description: "Summon this if there is a Dark card on the field.",
+      minLevel: 1,
+      limitPerTurn: 1,
+      activationType: {type: "Manual"},
+      onlyFrom: "Hand",
+      sendTo: "Field",
+      condition: (game) => {
+        return game.board.Field.some(c => c.elements.has("Dark"))
+      },
+      getStateChanges: () => []
+    }],
+    power: 200,
+    flavor: "rr3"
+  }
+
+  const rr4: CardDefinition = {
+    name: "Raidraptor - Bloom Vulture",
+    collectionNumber: 4,
+    elements: new Set(["Fire", "Dark"]),
+    level: 2,
+    abilities: [{
+      description: "If there are no cards on the field, summon this and target Raidraptor from your hand.",
+      minLevel: 1,
+      limitPerTurn: 1,
+      activationType: {type: "Manual"},
+      onlyFrom: "Hand",
+      sendTo: "Field",
+      targeting: {
+        canSelfTarget: false, //the first ability where this is actually important
+        isCardValidTarget: (game, thisCard, target) => {
+          return (getCardZone(game, target.iid) === "Hand" && target.name.includes("Raidraptor"))
+        }
+      },
+      condition: (game) => {
+        return (game.board.Field.length === 0)
+      },
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Field"}})
+      }
+    }, {
+      description: "If this is in the GY and there are no cards on the field, summon this and another target Raidraptor from the GY.",
+      minLevel: 1,
+      limitPerTurn: 1,
+      activationType: {type: "Manual"},
+      onlyFrom: "GY",
+      sendTo: "Field",
+      targeting: {
+        canSelfTarget: false,
+        isCardValidTarget: (game, thisCard, target) => {
+          //first use of thisCard
+          return (getCardZone(game, target.iid) === "GY" && target.name.includes("Raidraptor") && target.iid !== thisCard.iid)
+        }
+      },
+      condition: (game) => {
+        return (game.board.Field.length === 0)
+      },
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Field"}})
+      }
+    }],
+    power: 200,
+    flavor: "rr4"
+  }
+
+  const rr5: CardDefinition = {
+    name: "Raidraptor - Noir Lanius",
+    collectionNumber: 4,
+    elements: new Set(["Water", "Dark"]),
+    level: 2,
+    abilities: [{
+      description: "If there are no cards on the field, summon this and target Raidraptor from your hand.",
+      minLevel: 1,
+      limitPerTurn: 1,
+      activationType: {type: "Manual"},
+      onlyFrom: "Hand",
+      sendTo: "Field",
+      targeting: {
+        canSelfTarget: false, //the first ability where this is actually important
+        isCardValidTarget: (game, thisCard, target) => {
+          return (getCardZone(game, target.iid) === "Hand" && target.name.includes("Raidraptor"))
+        }
+      },
+      condition: (game) => {
+        return (game.board.Field.length === 0)
+      },
+      getStateChanges: (ctx) => {
+        return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Field"}})
+      }
+    }],
+    power: 200,
+    flavor: "rr4"
+  }
+
+  const rr7: CardDefinition = {
     name: "Raidraptor - Heel Eagle",
-    collectionNumber: 11,
+    collectionNumber: 7,
     elements: new Set(["Wind", "Dark"]),
     level: 1,
     abilities: [{
@@ -152,7 +286,7 @@
       getStateChanges: () => []
     }],
     power: 200,
-    flavor: "rr2"
+    flavor: "rr7"
   }
 
   //----------------- END TESTING --------------------//
@@ -172,9 +306,10 @@
   const mode: Ref<UIMode> = ref({type: "Standby"})
 
   const game = ref(initGame([
-    def1, def1, def1, def1, def1, 
-    def2, def2, def2, def2, def2,
-    rr1, rr1, rr1, rr2, rr2, rr2
+    // def1, def1, def1, def1, def1, 
+    // def2, def2, def2, def2, def2,
+    rr1, rr1, rr1, rr2, rr2, rr2, 
+    rr3, rr3, rr3, rr4, rr4, rr4,
   ]))
 
   const cardClickHandler = (card: CardInstance) => {

@@ -101,7 +101,7 @@
     cursor: unset;
   }
   .trigger {
-    border: solid 5px gray;
+    border: none;
     color: gray;
     padding: 0 10px;
     transition: all 0.25s;
