@@ -1,5 +1,7 @@
 //todo: use CardInstance instead of iid in most functions (not a big deal though)
 //todo: make the arguments for effects a single object?
+//todo: Ability's getStateChanges should become customLogic()? 
+//todo: make archetype searching case-insensitive
 
 import { shuffle } from "./utils"
 
