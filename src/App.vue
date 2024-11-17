@@ -40,7 +40,7 @@
 
   import type { Ability, CardInstance, GameState } from "./game"
   import { initGame, applyManualEffect, isAbilityActivatable, resumeTopTriggerWithTargets } from "./game"
-  import { rr1, rr2, rr3, rr4, pemi, fairy1, fairy2, fairy3 } from "./cards"
+  import { pemi, fairy1, fairy2, fairy3 } from "./cards"
 
 
   type UIMode = {

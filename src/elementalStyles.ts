@@ -1,6 +1,6 @@
-import type { Elemental } from "./game"
+import type { Resource } from "./game"
 
-export const getElementalColor = (element: Elemental) => {
+export const getElementalColor = (element: Resource) => {
   switch(element) {
     case "Holy":
       return "#ffffff"
@@ -25,7 +25,7 @@ export const getElementalColor = (element: Elemental) => {
   }
 }
 
-export const getElementalGradientStyle = (elementSet: Set<Elemental>) => {
+export const getElementalGradientStyle = (elementSet: Set<Resource>) => {
   const elements = [...elementSet]
   if (elements.length === 0) return {"background-color": "rgb(170, 170, 170)"}
   if (elements.length === 1) return {"background-color": getElementalColor(elements[0])}

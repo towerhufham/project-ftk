@@ -1,18 +1,17 @@
 <template>
-  <article :class="{'activatable': hasActivatableAbility}" :style="getElementalGradientStyle(card.elements)">
+  <article :class="{'activatable': hasActivatableAbility}" :style="backgroundGradientStyle">
     <p id="name">{{ card.name }}</p>
     <p id="flavor">{{ card.flavor }}</p>
-    <div id="elements">
+    <!-- <div id="elements">
       <ElementIcon v-for="e of card.elements" :e/>
-    </div>
+    </div> -->
   </article>
 </template>
 
 <script setup lang="ts">
-  import ElementIcon from "./ElementIcon.vue"
+  // import ElementIcon from "./ElementIcon.vue"
   import type { CardInstance, GameState } from "./game"
   import { isAbilityActivatable } from "./game"
-  import { getElementalGradientStyle } from "./elementalStyles"
   import { computed } from "vue"
 
   const props = defineProps<{
@@ -24,6 +23,20 @@
     return props.card.abilities.filter(a => a.activationType.type === "Manual")
       .map(a => isAbilityActivatable(props.game, props.card, a))
       .some(val => val === "OK")
+  })
+
+  const backgroundGradientStyle = computed(() => {
+    const stops = props.card.bgGradient 
+    if (stops.length === 0) return {"background-color": "rgb(170, 170, 170)"}
+    if (stops.length === 1) return {"background-color": stops[0]}
+    let pairs = []
+    let nextStop = 0
+    for (const stop of stops) {
+      pairs.push(`${stop} ${nextStop}%`)
+      nextStop += 100 / (stops.length - 1)
+    }
+    const deg = stops.length <= 2 ? 180 : 135
+    return {"background-image": `linear-gradient(${deg}deg, ${pairs.join(', ')})`}
   })
 </script>
 

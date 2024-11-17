@@ -5,7 +5,7 @@
 
 import { shuffle } from "./utils"
 
-export type Elemental = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
+export type Resource = "Holy" | "Fire" | "Stone" | "Thunder" | "Plant" | "Wind" | "Water" | "Dark" | "Cyber" | "Space"
 
 //making it an as const array instead of a union type makes it iteratable
 const ALL_ZONES = ["Hand", "Deck", "Deleted", "Field", "GY"] as const
@@ -46,10 +46,8 @@ export type AbilityContext = {
 export type CardDefinition = {
   collectionNumber: number
   name: string
-  elements: Set<Elemental>
-  level: number
+  bgGradient: string[]
   abilities: Ability[]
-  power: number
   flavor: string
 }
 
@@ -77,18 +75,19 @@ export type StateChange = {
   type: "Move Card"
   iid: number
   toZone: Zone
-} | {
-  type: "Change Elements"
-  iid: number
-  newElements: Set<Elemental>
-} | {
-  type: "Level Up"
-  iid: number
-} | {
-  type: "Change Power"
-  iid: number
-  newPower: number
 }
+// | {
+//   type: "Change Elements"
+//   iid: number
+//   newElements: Set<Resource>
+// } | {
+//   type: "Level Up"
+//   iid: number
+// } | {
+//   type: "Change Power"
+//   iid: number
+//   newPower: number
+// }
 
 export type GameState = {
   nextiid: number
@@ -229,7 +228,7 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
   //If it can't be activated, it returns a string saying why
   //todo: maybe check for multiple reasons it can't be activated?
   if (typeof ability.limitPerTurn === "number" && getAbilityUses(game, card.iid, ability) >= ability.limitPerTurn) return "Hit ability limit for this turn"
-  if (card.level < ability.minLevel) return "Card not high enough level"
+  // if (card.level < ability.minLevel) return "Card not high enough level"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
   if (ability.targeting && getValidAbilityTargets(game, card, ability).length === 0) return "Ability has no valid targets"
@@ -309,16 +308,16 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
         triggerCount: newGame.triggerCount + triggers.length
       }
     }
-    case "Change Elements": {
-      return editCardInstance(game, sc.iid, "elements", sc.newElements)
-    }
-    case "Level Up": {
-      const card = getCardInstance(game, sc.iid) 
-      return editCardInstance(game, sc.iid, "level", card.level + 1)
-    }
-    case "Change Power": {
-      return editCardInstance(game, sc.iid, "power", sc.newPower)
-    }
+    // case "Change Elements": {
+    //   return editCardInstance(game, sc.iid, "elements", sc.newElements)
+    // }
+    // case "Level Up": {
+    //   const card = getCardInstance(game, sc.iid) 
+    //   return editCardInstance(game, sc.iid, "level", card.level + 1)
+    // }
+    // case "Change Power": {
+    //   return editCardInstance(game, sc.iid, "power", sc.newPower)
+    // }
   }
 }
 

@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-  import type { Elemental } from './game';
+  import type { Resource } from './game';
   const props = defineProps<{
-    e: Elemental
+    e: Resource
   }>()
 </script>
