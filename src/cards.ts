@@ -1,6 +1,7 @@
 import type { CardDefinition, CardInstance, GameState, StateChange } from "./game"
 import { getCardZone } from "./game"
 
+import { moveTargetsToZone } from "./ability"
 
 //----------------- TESTING CARDS -----------------//
 
@@ -254,9 +255,7 @@ export const pemi: CardDefinition = {
       }
     },
     resourceCost: [{resource: "Holy", amount: 1}],
-    getStateChanges: (ctx) => {
-      return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}}) as StateChange[]
-    }
+    getStateChanges: moveTargetsToZone("Hand")
   }],
   flavor: "Bweeeooo"
 }
