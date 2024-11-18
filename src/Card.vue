@@ -2,14 +2,10 @@
   <article :class="{'activatable': hasActivatableAbility}" :style="backgroundGradientStyle">
     <p id="name">{{ card.name }}</p>
     <p id="flavor">{{ card.flavor }}</p>
-    <!-- <div id="elements">
-      <ElementIcon v-for="e of card.elements" :e/>
-    </div> -->
   </article>
 </template>
 
 <script setup lang="ts">
-  // import ElementIcon from "./ElementIcon.vue"
   import type { CardInstance, GameState } from "./game"
   import { isAbilityActivatable } from "./game"
   import { computed } from "vue"

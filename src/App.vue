@@ -13,9 +13,7 @@
     @select="(target: CardInstance) => executeAbilityWithTargets([target])"
   />
   <main>
-    <p id="debug-resources">
-      {{ JSON.stringify(game.resources) }}
-    </p>
+    <ElementIcons :resources="game.resources" id="debug-resources"/>
     <section id="field">
       <Card v-for="card of game.board['Field']" :game :card @click="cardClickHandler(card)"/>
     </section>
@@ -44,6 +42,7 @@
   import type { Ability, CardInstance, GameState } from "./game"
   import { initGame, applyManualEffect, isAbilityActivatable, resumeTopTriggerWithTargets } from "./game"
   import { pemi, fairy1, fairy2, fairy3 } from "./cards"
+import ElementIcons from "./ElementIcons.vue"
 
 
   type UIMode = {
@@ -173,6 +172,7 @@
     left: 5px;
     margin: 0;
     font-family: "Jost";
-    font-weight: bold;;
+    font-weight: bold;
+    font-size: 64px;
   }
 </style>
