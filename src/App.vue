@@ -13,6 +13,9 @@
     @select="(target: CardInstance) => executeAbilityWithTargets([target])"
   />
   <main>
+    <p id="debug-resources">
+      {{ JSON.stringify(game.resources) }}
+    </p>
     <section id="field">
       <Card v-for="card of game.board['Field']" :game :card @click="cardClickHandler(card)"/>
     </section>
@@ -163,5 +166,13 @@
     font-size: 64px;
     font-weight: bold;
     font-family: "Aldrich", serif;
+  }
+  #debug-resources {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    margin: 0;
+    font-family: "Jost";
+    font-weight: bold;;
   }
 </style>

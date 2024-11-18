@@ -75,6 +75,14 @@ export type StateChange = {
   type: "Move Card"
   iid: number
   toZone: Zone
+} | {
+  type: "Add Resource",
+  resource: Resource,
+  amount: number
+} | {
+  type: "Subtract Resource",
+  resource: Resource,
+  amount: number
 }
 // | {
 //   type: "Change Elements"
@@ -92,6 +100,7 @@ export type StateChange = {
 export type GameState = {
   nextiid: number
   board: Record<Zone, CardInstance[]>
+  resources: Record<Resource, number>
   moves: number
   history: StateChange[]
   interactionState: {type: "Standby"} | {type: "Targeting", card: CardInstance, ability: Ability}
@@ -110,6 +119,21 @@ const emptyBoard = (): Record<Zone, CardInstance[]> => {
   }
 }
 
+const emptyResources = (): Record<Resource, number> => {
+  return {
+    "Holy": 0,
+    "Fire": 0,
+    "Stone": 0,
+    "Thunder": 0,
+    "Plant": 0,
+    "Wind": 0,
+    "Water": 0,
+    "Dark": 0,
+    "Cyber": 0,
+    "Space": 0
+  }
+}
+
 export const initGame = (decklist: CardDefinition[]): GameState => {
   //this bit was written by chat gpt, i didn't realize you could use reduce like that...
   const instances = decklist.reduce(
@@ -124,6 +148,7 @@ export const initGame = (decklist: CardDefinition[]): GameState => {
       "Hand": shuffledInstances.slice(0, 5),
       "Deck": shuffledInstances.slice(5)
     },
+    resources: emptyResources(),
     moves: 0,
     history: [],
     interactionState: {type: "Standby"},
@@ -306,6 +331,24 @@ const applyTopStateChange = (gameWithFullQueue: GameState): GameState => {
         ...newGame,
         triggerQueue: [...newGame.triggerQueue, ...triggersWithCards],
         triggerCount: newGame.triggerCount + triggers.length
+      }
+    }
+    case "Subtract Resource": {
+      return {
+        ...game,
+        resources: {
+          ...game.resources,
+          [sc.resource]: game.resources[sc.resource] - sc.amount
+        }
+      }
+    }
+    case "Add Resource": {
+      return {
+        ...game,
+        resources: {
+          ...game.resources,
+          [sc.resource]: game.resources[sc.resource] + sc.amount
+        }
       }
     }
     // case "Change Elements": {

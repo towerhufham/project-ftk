@@ -1,4 +1,4 @@
-import type { CardDefinition, CardInstance, GameState } from "./game"
+import type { CardDefinition, CardInstance, GameState, StateChange } from "./game"
 import { getCardZone } from "./game"
 
 
@@ -242,7 +242,7 @@ export const rr7: CardDefinition = {
 export const pemi: CardDefinition = {
   name: "Pemi, the Fairyguide",
   collectionNumber: 1,
-  bgGradient: ["#ffffff", "#FFFFED"],
+  bgGradient: ["#ffffff", "#FFFFC5"],
   abilities: [{
     description: "Summon this.",
     minLevel: 1,
@@ -252,12 +252,13 @@ export const pemi: CardDefinition = {
     activationType: {type: "Manual"},
     getStateChanges: () => []
   }, {
-    description: "Send this to the GY to search for a 'Fairy' to your hand.",
+    description: "1 Holy -> Send this to the GY to search a 'Fairy' to your hand.",
     minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Field",
     sendTo: "GY",
     activationType: {type: "Manual"},
+    condition: (game) => game.resources.Holy > 0,
     targeting: {
       canSelfTarget: false,
       isCardValidTarget: (game, thisCard, target) => {
@@ -265,7 +266,8 @@ export const pemi: CardDefinition = {
       }
     },
     getStateChanges: (ctx) => {
-      return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}})
+      const move = ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}}) as StateChange[]
+      return [...move, {type: "Subtract Resource", resource: "Holy", amount: 1}]
     }
   }],
   flavor: "Bweeeooo"
@@ -276,7 +278,7 @@ export const fairy1: CardDefinition = {
   collectionNumber: 2,
   bgGradient: ["#ffffff", "#90EE90"],
   abilities: [{
-    description: "Summon this if there are fewer than 3 cards on the field.",
+    description: "Summon this if there are fewer than 3 cards on the field. +1 Holy",
     minLevel: 1,
     limitPerTurn: "Unlimited",
     onlyFrom: "Hand",
@@ -285,7 +287,7 @@ export const fairy1: CardDefinition = {
     condition: (game) => {
       return (game.board.Field.length < 3)
     },
-    getStateChanges: () => []
+    getStateChanges: () => [{type: "Add Resource", resource: "Holy", amount: 1}]
   }],
   flavor: "It perches on the columns"
 }
@@ -295,7 +297,7 @@ export const fairy2: CardDefinition = {
   collectionNumber: 3,
   bgGradient: ["#ffffff", "#FF6961"],
   abilities: [{
-    description: "Summon this if there are fewer than 3 cards on the field.",
+    description: "Summon this if there are fewer than 3 cards on the field. +1 Holy",
     minLevel: 1,
     limitPerTurn: "Unlimited",
     onlyFrom: "Hand",
@@ -304,7 +306,7 @@ export const fairy2: CardDefinition = {
     condition: (game) => {
       return (game.board.Field.length < 3)
     },
-    getStateChanges: () => []
+    getStateChanges: () => [{type: "Add Resource", resource: "Holy", amount: 1}]
   }],
   flavor: "It flies low to the cloudy puffs and the golden ground"
 }
@@ -314,7 +316,7 @@ export const fairy3: CardDefinition = {
   collectionNumber: 4,
   bgGradient: ["#ffffff", "#ADD8E6"],
   abilities: [{
-    description: "Summon this if there are fewer than 3 cards on the field.",
+    description: "Summon this if there are fewer than 3 cards on the field. +1 Holy",
     minLevel: 1,
     limitPerTurn: "Unlimited",
     onlyFrom: "Hand",
@@ -323,7 +325,7 @@ export const fairy3: CardDefinition = {
     condition: (game) => {
       return (game.board.Field.length < 3)
     },
-    getStateChanges: () => []
+    getStateChanges: () => [{type: "Add Resource", resource: "Holy", amount: 1}]
   }],
   flavor: "They can be seen descending from high up in groups"
 }
