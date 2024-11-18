@@ -252,7 +252,7 @@ export const pemi: CardDefinition = {
     activationType: {type: "Manual"},
     getStateChanges: () => []
   }, {
-    description: "1 Holy -> Send this to the GY to search a 'Fairy' to your hand.",
+    description: "1 Holy → Send this to the GY to search a 'Fairy' to your hand.",
     minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Field",
