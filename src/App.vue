@@ -59,10 +59,6 @@ import ElementIcons from "./ElementIcons.vue"
   const mode: Ref<UIMode> = ref({type: "Standby"})
 
   const game = ref(initGame([
-    // def1, def1, def1, def1, def1, 
-    // def2, def2, def2, def2, def2,
-    // rr1, rr1, rr1, rr2, rr2, rr2, 
-    // rr3, rr3, rr3, rr4, rr4, rr4,
     pemi, pemi, pemi, fairy1, fairy1, fairy1,
     fairy2, fairy2, fairy2, fairy3, fairy3, fairy3
   ]))

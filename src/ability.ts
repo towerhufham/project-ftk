@@ -1,10 +1,12 @@
 //composable ability shorthands
 //once this gets to a comfortable place, can remove "extraneous" things like sendTo from Ability definition
 
-import type { Ability, AbilityContext, StateChange, Zone } from "./game"
+import type { AbilityContext, StateChange, Zone } from "./game"
 
-export const moveTargetsToZone = (to: Zone): ((ctx: AbilityContext) => StateChange[]) => {
-  return (ctx) => {
-    return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: to}}) as StateChange[]
+type StateChangeGenerator = (ctx: AbilityContext) => StateChange[]
+
+export const moveTargetsToZone = (to: Zone): StateChangeGenerator => {
+  return (ctx: AbilityContext) => {
+    return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: to}})
   }
 }
