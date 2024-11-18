@@ -1,6 +1,5 @@
 //todo: use CardInstance instead of iid in most functions (not a big deal though)
 //todo: make the arguments for effects a single object?
-//todo: Ability's getStateChanges should become customLogic()? 
 //todo: make archetype searching case-insensitive
 
 import { shuffle } from "./utils"
@@ -13,7 +12,6 @@ export type Zone = typeof ALL_ZONES[number]
 
 export type Ability = {
   description: string
-  minLevel: number
   limitPerTurn: number | "Unlimited"
   onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange

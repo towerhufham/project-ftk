@@ -10,7 +10,6 @@ export const def1: CardDefinition = {
   bgGradient: [],
   abilities: [{
     description: "Search Any From Deck",
-    minLevel: 1,
     limitPerTurn: 1,
     sendTo: "GY",
     activationType: {type: "Manual"},
@@ -25,7 +24,6 @@ export const def1: CardDefinition = {
     }
   }, {
     description: "When this enters the GY, search 1 card and then delete this.",
-    minLevel: 1,
     limitPerTurn: 1,
     activationType: {type: "Zone Trigger", zone: "GY"},
     sendTo: "Deleted",
@@ -47,7 +45,6 @@ export const def2: CardDefinition = {
   bgGradient: [],
   abilities: [{
     description: "Summon",
-    minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Hand",
     sendTo: "Field",
@@ -56,7 +53,6 @@ export const def2: CardDefinition = {
   },
   {
     description: "Draw 2",
-    minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Field",
     activationType: {type: "Manual"},
@@ -74,7 +70,6 @@ export const rr1: CardDefinition = {
   bgGradient: [],
   abilities: [{
     description: "Summon this and send a Raidraptor from your Deck to the GY",
-    minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Hand",
     sendTo: "Field",
@@ -149,7 +144,6 @@ export const rr4: CardDefinition = {
   bgGradient: [],
   abilities: [{
     description: "If there are no cards on the field, summon this and target Raidraptor from your hand.",
-    minLevel: 1,
     limitPerTurn: 1,
     activationType: {type: "Manual"},
     onlyFrom: "Hand",
@@ -168,7 +162,6 @@ export const rr4: CardDefinition = {
     }
   }, {
     description: "If this is in the GY and there are no cards on the field, summon this and another target Raidraptor from the GY.",
-    minLevel: 1,
     limitPerTurn: 1,
     activationType: {type: "Manual"},
     onlyFrom: "GY",
@@ -196,7 +189,6 @@ export const rr5: CardDefinition = {
   bgGradient: [],
   abilities: [{
     description: "If there are no cards on the field, summon this and target Raidraptor from your hand.",
-    minLevel: 1,
     limitPerTurn: 1,
     activationType: {type: "Manual"},
     onlyFrom: "Hand",
@@ -223,7 +215,6 @@ export const rr7: CardDefinition = {
   bgGradient: [],
   abilities: [{
     description: "Summon this if all monsters on the field are Raidraptors (minimum 1)",
-    minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Hand",
     sendTo: "Field",
@@ -245,7 +236,6 @@ export const pemi: CardDefinition = {
   bgGradient: ["#ffffff", "#FFFFC5"],
   abilities: [{
     description: "Summon this.",
-    minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Hand",
     sendTo: "Field",
@@ -253,7 +243,6 @@ export const pemi: CardDefinition = {
     getStateChanges: () => []
   }, {
     description: "1 Holy → Send this to the GY to search a 'Fairy' to your hand.",
-    minLevel: 1,
     limitPerTurn: 1,
     onlyFrom: "Field",
     sendTo: "GY",
@@ -279,7 +268,6 @@ export const fairy1: CardDefinition = {
   bgGradient: ["#ffffff", "#90EE90"],
   abilities: [{
     description: "Summon this if there are fewer than 3 cards on the field. +1 Holy",
-    minLevel: 1,
     limitPerTurn: "Unlimited",
     onlyFrom: "Hand",
     sendTo: "Field",
@@ -298,7 +286,6 @@ export const fairy2: CardDefinition = {
   bgGradient: ["#ffffff", "#FF6961"],
   abilities: [{
     description: "Summon this if there are fewer than 3 cards on the field. +1 Holy",
-    minLevel: 1,
     limitPerTurn: "Unlimited",
     onlyFrom: "Hand",
     sendTo: "Field",
@@ -317,7 +304,6 @@ export const fairy3: CardDefinition = {
   bgGradient: ["#ffffff", "#ADD8E6"],
   abilities: [{
     description: "Summon this if there are fewer than 3 cards on the field. +1 Holy",
-    minLevel: 1,
     limitPerTurn: "Unlimited",
     onlyFrom: "Hand",
     sendTo: "Field",
