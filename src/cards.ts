@@ -247,16 +247,15 @@ export const pemi: CardDefinition = {
     onlyFrom: "Field",
     sendTo: "GY",
     activationType: {type: "Manual"},
-    condition: (game) => game.resources.Holy > 0,
     targeting: {
       canSelfTarget: false,
       isCardValidTarget: (game, thisCard, target) => {
         return (getCardZone(game, target.iid) === "Deck" && target.name.includes("Fairy"))
       }
     },
+    resourceCost: [{resource: "Holy", amount: 1}],
     getStateChanges: (ctx) => {
-      const move = ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}}) as StateChange[]
-      return [...move, {type: "Subtract Resource", resource: "Holy", amount: 1}]
+      return ctx.targets.map(c => { return {type: "Move Card", iid: c.iid, toZone: "Hand"}}) as StateChange[]
     }
   }],
   flavor: "Bweeeooo"

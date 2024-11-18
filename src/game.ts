@@ -15,7 +15,9 @@ export type Ability = {
   limitPerTurn: number | "Unlimited"
   onlyFrom?: Zone
   sendTo?: Zone //this is just a helper, could do it with a StateChange
-  activationType: {type: "Manual"} | {
+  activationType: {
+    type: "Manual"
+  } | {
     type: "Zone Trigger"
     zone: Zone
   }
@@ -30,8 +32,8 @@ export type Ability = {
     // todo: canTargetWithSameName (would be part of the above I guess)
     // todo: theres an opportunity for a hook in the effect logic, since the same logic will usually always be applied equally to each target
     // todo: simple "target must be" field with a partial of a CardInstance (get gpt to help write this)
-
   }
+  resourceCost?: {resource: Resource, amount: number}[]
   getStateChanges: (ctx: AbilityContext) => StateChange[]
 } 
 
@@ -244,8 +246,12 @@ export const getValidAbilityTargets = (game: GameState, card: CardInstance, abil
   return (ability.targeting.canSelfTarget) ? valid : valid.filter(c => c !== card)
 }
 
+const canPayResourceCost = (game: GameState, costs: {resource: Resource, amount: number}[]) => {
+  return costs.every(c => game.resources[c.resource] >= c.amount)
+}
+
 type ActivationResult = "OK" | "Hit ability limit for this turn" | "Card condition not met" 
-  | "Card not in the right zone" | "Ability has no valid targets" | "Card not high enough level"
+  | "Card not in the right zone" | "Ability has no valid targets" | "Can't pay resource cost"
 
 export const isAbilityActivatable = (game: GameState, card: CardInstance, ability: Ability): ActivationResult => {
   //If it can't be activated, it returns a string saying why
@@ -254,6 +260,7 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
   // if (card.level < ability.minLevel) return "Card not high enough level"
   if (ability.onlyFrom && getCardZone(game, card.iid) !== ability.onlyFrom) return "Card not in the right zone"
   if (ability.condition && !ability.condition(game, card)) return "Card condition not met"
+  if (ability.resourceCost && !canPayResourceCost(game, ability.resourceCost)) return "Can't pay resource cost"
   if (ability.targeting && getValidAbilityTargets(game, card, ability).length === 0) return "Ability has no valid targets"
   return "OK"
 }
@@ -261,7 +268,14 @@ export const isAbilityActivatable = (game: GameState, card: CardInstance, abilit
 export const getFullStateChanges = (ability: Ability, ctx: AbilityContext): StateChange[] => {
   //adds sendTo logic, might do more later
   const stateChanges = ability.getStateChanges(ctx)
-  return ability.sendTo ? [...stateChanges, {type: "Move Card", iid: ctx.card.iid, toZone: ability.sendTo}] : stateChanges
+  const costChanges = ability.resourceCost 
+    ?  ability.resourceCost.map(c => {return {type: "Subtract Resource", resource: c.resource, amount: c.amount} as StateChange})
+    : [] 
+  const withResourceCosts = [
+    ...costChanges,
+    ...stateChanges
+  ]
+  return ability.sendTo ? [...withResourceCosts, {type: "Move Card", iid: ctx.card.iid, toZone: ability.sendTo}] : withResourceCosts
 }
 
 export const applyManualEffect = (game: GameState, card: CardInstance, ability: Ability, targets: CardInstance[]): GameState => {
