@@ -41,8 +41,8 @@
 
   import type { Ability, CardInstance, GameState } from "./game"
   import { initGame, applyManualEffect, isAbilityActivatable, resumeTopTriggerWithTargets } from "./game"
-  import { pemi, fairy1, fairy2, fairy3 } from "./cards"
-import ElementIcons from "./ElementIcons.vue"
+  import { pemi, fairy1, fairy2, fairy3, qli1, qli2, qli3, qli4, qli5, qli6, qli7, qli8, qli9 } from "./cards"
+  import ElementIcons from "./ElementIcons.vue"
 
 
   type UIMode = {
@@ -59,8 +59,13 @@ import ElementIcons from "./ElementIcons.vue"
   const mode: Ref<UIMode> = ref({type: "Standby"})
 
   const game = ref(initGame([
-    pemi, pemi, pemi, fairy1, fairy1, fairy1,
-    fairy2, fairy2, fairy2, fairy3, fairy3, fairy3
+    // pemi, pemi, pemi, fairy1, fairy1, fairy1,
+    // fairy2, fairy2, fairy2, fairy3, fairy3, fairy3
+    qli1,
+    qli2, qli2, qli2, qli3, qli3, qli3,
+    qli4, qli4, qli4, qli5, qli5, qli5,
+    qli6, qli6, qli6, qli7, qli7, qli7,
+    qli8, qli8, qli8, qli9, qli9, qli9
   ]))
 
   const cardClickHandler = (card: CardInstance) => {
