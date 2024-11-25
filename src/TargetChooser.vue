@@ -64,11 +64,14 @@
     justify-content: center;
     align-items: center;
     padding: 0 15px 15px;
+    max-height: 80vh;
   }
   #cards {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    overflow-y: scroll;
+    justify-content: center;
   }
   .card-holder {
     cursor: pointer;
