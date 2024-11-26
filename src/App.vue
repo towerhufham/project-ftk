@@ -43,7 +43,7 @@
   import TargetChooser from "./TargetChooser.vue"
 
   import type { Ability, CardInstance, GameState } from "./game"
-  import { initGame, applyManualEffect, isAbilityActivatable, resumeTopTriggerWithTargets } from "./game"
+  import { initGame, applyManualEffect, isAbilityActivatable, resumeTopTriggerWithTargets, moveCard, getCardZone } from "./game"
   import { hunter1, hunter2, hunter3, beast1, beast2, beast3 } from "./cards"
   import ElementIcons from "./ElementIcons.vue"
 
@@ -75,7 +75,24 @@
     if (mode.value.type === "Standby") {
       mode.value = {type: "Choosing Ability", card}
     } else if (mode.value.type === "Attacking Standby") {
+      if (getCardZone(game.value, card.iid) !== "Field") return
       mode.value = {type: "Attacking", card}
+    } else if (mode.value.type === "Attacking") {
+      if (card.iid === mode.value.card.iid) {
+        //if click on same card, cancel
+        mode.value = {type: "Attacking Standby"}
+      } else {
+        //if click on other card, try fighting
+        //todo: actually do this logic correctly
+        if (getCardZone(game.value, card.iid) !== "Field") return
+        if (card.atk <= mode.value.card.atk) {
+          game.value = moveCard(game.value, card.iid, "GY")
+          if (card.atk === mode.value.card.atk) {
+            game.value = moveCard(game.value, mode.value.card.iid, "GY")
+          }
+          mode.value = {type: "Attacking Standby"}
+        }
+      }
     }
   }
 
