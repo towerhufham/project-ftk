@@ -2,6 +2,7 @@
   <article :class="{'activatable': hasActivatableAbility}" :style="backgroundGradientStyle">
     <p id="name">{{ card.name }}</p>
     <p id="flavor">{{ card.flavor }}</p>
+    <p id="atk">{{ card.atk }}</p>
   </article>
 </template>
 
@@ -74,9 +75,13 @@
     margin: 0;
     font-family: "Alegreya SC", serif;
   }
-  #elements {
+  #atk {
+    font-style: italic;
     position: absolute;
     right: 5px;
-    top: 5px;
+    bottom: 5px;
+    margin: 0;
+    font-family: "Jost", serif;
+    font-size: 18px;
   }
 </style>

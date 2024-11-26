@@ -49,6 +49,7 @@ export type CardDefinition = {
   bgGradient: string[]
   abilities: Ability[]
   flavor: string
+  atk: number
 }
 
 export type CardInstance = CardDefinition & {
