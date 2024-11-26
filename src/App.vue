@@ -14,6 +14,9 @@
   />
   <main>
     <ElementIcons :resources="game.resources" id="debug-resources"/>
+    <div id="attack-button" @click="attackButtonClick">
+      {{ mode.type === "Attacking Standby" || mode.type === "Attacking" ? "Attacking!" : "Attack" }}
+    </div>
     <section id="field">
       <Card v-for="card of game.board['Field']" :game :card @click="cardClickHandler(card)"/>
     </section>
@@ -54,6 +57,11 @@
     type: "Choosing Targets",
     card: CardInstance,
     ability: Ability
+  } | {
+    type: "Attacking Standby"
+  } | {
+    type: "Attacking",
+    card: CardInstance
   }
 
   const mode: Ref<UIMode> = ref({type: "Standby"})
@@ -65,10 +73,9 @@
 
   const cardClickHandler = (card: CardInstance) => {
     if (mode.value.type === "Standby") {
-      mode.value = {
-        type: "Choosing Ability", 
-        card
-      }
+      mode.value = {type: "Choosing Ability", card}
+    } else if (mode.value.type === "Attacking Standby") {
+      mode.value = {type: "Attacking", card}
     }
   }
 
@@ -105,6 +112,14 @@
       mode.value = {type: "Choosing Targets", card: result.interactionState.card, ability: result.interactionState.ability}
     }
     console.log(game.value)
+  }
+
+  const attackButtonClick = () => {
+    if (mode.value.type === "Standby") {
+      mode.value = {type: "Attacking Standby"}
+    } else if (mode.value.type === "Attacking Standby" || mode.value.type === "Attacking") {
+      mode.value = {type: "Standby"}
+    }
   }
 </script>
 
@@ -170,5 +185,17 @@
     font-family: "Jost";
     font-weight: bold;
     font-size: 64px;
+  }
+  #attack-button {
+    position: absolute;
+    top: 5px;
+    left: 47vw;
+    font-size: 24px;
+    background-color: darkred;
+    color: white;
+    padding: 10px;
+    font-family: "Jost";
+    border-radius: 10px;
+    cursor: pointer;
   }
 </style>
